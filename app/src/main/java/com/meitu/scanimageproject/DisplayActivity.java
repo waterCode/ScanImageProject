@@ -8,6 +8,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
+import com.meitu.scanimageview.ScanImageView;
+
+import java.io.IOException;
+
 
 /**
  * Created by zmc on 2017/7/18.
@@ -32,7 +36,11 @@ public class DisplayActivity extends AppCompatActivity {
 
         mScanImageView = (ScanImageView) findViewById(R.id.scan_iv);
         uri = getIntent().getParcelableExtra("uri");
-        mScanImageView.setImageURI(uri);
+        try {
+            mScanImageView.setImageUri(uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
