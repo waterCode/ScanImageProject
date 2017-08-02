@@ -6,10 +6,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
@@ -22,10 +24,13 @@ import java.io.InputStream;
  */
 
 public class ScanImageView extends android.support.v7.widget.AppCompatImageView {
-
+    private static final String TAG = ScanImageView.class.getSimpleName();
     private final Rect mScanViewRect = new Rect();//view所在图片真实区域，一开始为原始比例1
-    private final Rect mRealBitmapRect = new Rect();
-    private final Rect mOriginalBitmapRect = new Rect();
+    private final Rect mRealBitmapRect = new Rect();//真实图片所在区域，
+    private final Rect mOriginalBitmapRect = new Rect();//原图所在区域
+
+    private final PointF leftTopPoint = new PointF(0,0);//左上角顶点
+    private final Rect mBitmapArea = new Rect();
     private Bitmap mCurrentBitmap;
     private BitmapRegionDecoder mBitmapRegionDecoder;
     private final BitmapFactory.Options mDecoderOptions = new BitmapFactory.Options();
@@ -96,7 +101,8 @@ public class ScanImageView extends android.support.v7.widget.AppCompatImageView 
             public void run() {
                 if (mBitmapRegionDecoder != null) {
                     updateBitmapRect();
-                    mCurrentBitmap = mBitmapRegionDecoder.decodeRegion(mRealBitmapRect, mDecoderOptions);
+                    updateBitmapArea(0,0);
+                    mCurrentBitmap = mBitmapRegionDecoder.decodeRegion(mBitmapArea, mDecoderOptions);
                 }
                 if (mCurrentBitmap != null) ;
                 setImageBitmap(mCurrentBitmap);
@@ -113,8 +119,36 @@ public class ScanImageView extends android.support.v7.widget.AppCompatImageView 
 
     }
 
+    private void updateBitmapArea(float distanceX, float distanceY) {
+        leftTopPoint.x += distanceX;//移动左上角顶点
+        leftTopPoint.y += distanceY;
+        if (leftTopPoint.x < 0) {
+            leftTopPoint.x = 0;
+        }
+        if (leftTopPoint.y < 0) {
+            leftTopPoint.y = 0;
+        }
+
+        float right = mScanViewRect.right - leftTopPoint.x;
+        if (right < 0)
+            right = 0;
+        if (right > mScanViewRect.width())
+            right = mScanViewRect.width();
+
+        float bottom = mScanViewRect.bottom - leftTopPoint.y;
+        if (bottom < 0)
+            bottom = 0;
+        if (bottom > mScanViewRect.height()) {
+            bottom = mScanViewRect.height();
+        }
+
+        //设置区域
+        mBitmapArea.set((int)leftTopPoint.x, (int)leftTopPoint.y, (int)bottom, (int)right);//会丢失精度吧
+    }
 
     private void moveScanViewRect(float distanceX, float distanceY) {
+        //右移动是减，
+        Log.d(TAG, "distanceX" + distanceX);
         mOriginalBitmapRect.left -= distanceX;
         mOriginalBitmapRect.right -= distanceX;
         mOriginalBitmapRect.top -= distanceY;
@@ -126,6 +160,7 @@ public class ScanImageView extends android.support.v7.widget.AppCompatImageView 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
             moveScanViewRect(distanceX, distanceY);
+            updateBitmapArea(distanceX, distanceY);
             updateBitmapRect();
             invalidate();
             return super.onScroll(e1, e2, distanceX, distanceY);
