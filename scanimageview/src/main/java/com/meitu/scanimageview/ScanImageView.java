@@ -5,6 +5,8 @@ import android.graphics.Canvas;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -19,13 +21,14 @@ public class ScanImageView extends SurfaceView implements SurfaceHolder.Callback
 
     private InputStreamScene imageSecene;
     private DrawThread mDrawThread;
+    private GestureDetector mGestureDetector;
 
     public ScanImageView(Context context) {
         this(context, null);
     }
 
     public ScanImageView(Context context, AttributeSet attrs) {
-        this(context, null, 0);
+        this(context, attrs, 0);
     }
 
     public ScanImageView(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -46,6 +49,7 @@ public class ScanImageView extends SurfaceView implements SurfaceHolder.Callback
             @Override
             public void run() {
                 imageSecene.initViewPoint(getWidth(),getHeight());//初始化视图窗口
+
             }
         });
     }
@@ -66,6 +70,16 @@ public class ScanImageView extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceDestroyed(SurfaceHolder holder) {
 
     }
+
+    class MoveGestureListener extends GestureDetector.SimpleOnGestureListener{
+
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            return super.onScroll(e1, e2, distanceX, distanceY);
+        }
+    }
+
 
     private class DrawThread extends Thread {
 

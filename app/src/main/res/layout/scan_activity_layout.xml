@@ -3,8 +3,10 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
+
     <com.meitu.scanimageview.ScanImageView
-        android:id="@+id/scan_iv"
+        android:id="@+id/scan_imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </LinearLayout>
