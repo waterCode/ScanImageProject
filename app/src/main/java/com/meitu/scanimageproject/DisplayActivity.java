@@ -8,10 +8,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
-import com.meitu.scanimageview.ScanImageView;
 import com.meitu.scanimageview.ScanPhotoView;
-
-import java.io.IOException;
 
 
 /**
@@ -37,8 +34,7 @@ public class DisplayActivity extends AppCompatActivity {
 
         uri = getIntent().getParcelableExtra("uri");
         mScanImageView = (ScanPhotoView) findViewById(R.id.scan_imageView);
-       // uri = Uri.parse("content://com.android.providers.media.documents/document/image%3A66");//大图
-            mScanImageView.setImageURI(uri);
+        mScanImageView.setImageURI(uri);
 
     }
 
