@@ -5,7 +5,7 @@
 
 
 
-    <com.meitu.scanimageview.ScanImageView
+    <com.meitu.scanimageview.ScanPhotoView
         android:id="@+id/scan_imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
