@@ -38,8 +38,15 @@ public class ScanImageView extends SurfaceView implements SurfaceHolder.Callback
 
     private void init() {
         getHolder().addCallback(this);
+        mGestureDetector = new GestureDetector(getContext(),new MoveGestureListener());
     }
 
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        mGestureDetector.onTouchEvent(event);
+        return true;
+    }
 
     public void setImageUri(@NonNull Uri uri) throws IOException {
         // TODO: 2017/8/2 要不要声明notnull
@@ -54,6 +61,11 @@ public class ScanImageView extends SurfaceView implements SurfaceHolder.Callback
         });
     }
 
+    private void moveTo(float distanceX, float distanceY) {
+        if(imageSecene != null){
+            imageSecene.moveViewPointWindow((int)distanceX,(int)distanceY);
+        }
+    }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
@@ -71,13 +83,16 @@ public class ScanImageView extends SurfaceView implements SurfaceHolder.Callback
 
     }
 
-    class MoveGestureListener extends GestureDetector.SimpleOnGestureListener{
+    private class MoveGestureListener extends GestureDetector.SimpleOnGestureListener{
 
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            return super.onScroll(e1, e2, distanceX, distanceY);
+            moveTo(distanceX,distanceY);
+            return true;
         }
+
+
     }
 
 

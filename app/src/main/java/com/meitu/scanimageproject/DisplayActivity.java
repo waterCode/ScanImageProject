@@ -26,7 +26,7 @@ public class DisplayActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.scan_activity_layout);
-        /*if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         } else {
@@ -34,9 +34,9 @@ public class DisplayActivity extends AppCompatActivity {
             //finish();
         }
 
-        uri = getIntent().getParcelableExtra("uri");*/
+        uri = getIntent().getParcelableExtra("uri");
         mScanImageView = (ScanImageView) findViewById(R.id.scan_imageView);
-        uri = Uri.parse("content://media/external/images/media/62480");//大图
+       // uri = Uri.parse("content://com.android.providers.media.documents/document/image%3A66");//大图
         try {
             mScanImageView.setImageUri(uri);
         } catch (IOException e) {

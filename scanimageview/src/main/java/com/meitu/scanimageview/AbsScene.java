@@ -11,9 +11,10 @@ import android.graphics.Rect;
 
 public abstract class AbsScene {
 
-    protected Rect mOriginBitmapWindow;
+    protected Rect mOriginBitmapWindow;//在子类构造器初始化
     protected Cache mBitmapCache = new Cache();
-    protected Viewpoint mViewpoint;
+    protected Viewpoint mViewpoint;//在InitViewPoint初始化
+
 
 
     public void initViewPoint(int width, int height) {
@@ -28,6 +29,14 @@ public abstract class AbsScene {
         }
     }
 
+    public void moveViewPointWindow(int dx, int dy ){
+        if(mViewpoint != null) {
+            mViewpoint.window.left -= dx;
+            mViewpoint.window.right -= dx;
+            mViewpoint.window.top -= dy;
+            mViewpoint.window.bottom -= dy;
+        }
+    }
 
     public class Cache {
 

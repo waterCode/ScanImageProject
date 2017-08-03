@@ -27,6 +27,8 @@ public class InputStreamScene extends AbsScene {
 
     private final int BITMAP_INSAMPLESIZE;//样例图压缩比例
 
+
+
     // TODO: 2017/8/2 复用会重用输入流
     public InputStreamScene(ContentResolver contentResolver, Uri uri) throws IOException {
         InputStream inputStream  =contentResolver.openInputStream(uri);
