@@ -44,6 +44,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         mGestureDetector.onTouchEvent(event);
+        mScaleGestureDetector.onTouchEvent(event);
         return true;
     }
 
@@ -84,6 +85,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             imageSecene.postScaleViewPointWindow(detector.getScaleFactor());
+            invalidate();
             return true;
         }
     }

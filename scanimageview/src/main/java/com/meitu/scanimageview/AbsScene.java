@@ -105,6 +105,11 @@ public abstract class AbsScene {
             return window;
         }
 
+
+        public float getScale() {
+            return scale;
+        }
+
         public void draw(Canvas canvas) {
             mBitmapCache.check(mViewpoint);//检查缓存
             canvas.drawBitmap(bitmap, 0, 0, null);

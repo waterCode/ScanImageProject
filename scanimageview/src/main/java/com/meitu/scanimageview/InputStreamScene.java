@@ -45,15 +45,25 @@ public class InputStreamScene extends AbsScene {
     @Override
     protected void loadSampleBitmapToViewpoint(Bitmap bitmap, Viewpoint viewpoint) {
         Canvas canvas = new Canvas(bitmap);
-        int left = viewpoint.getWindow().left / BITMAP_INSAMPLESIZE;
+        int left =  viewpoint.getWindow().left / BITMAP_INSAMPLESIZE;
         int top = viewpoint.getWindow().top / BITMAP_INSAMPLESIZE;
         int right = viewpoint.getWindow().right / BITMAP_INSAMPLESIZE;
-        int bottom = viewpoint.getWindow().bottom / BITMAP_INSAMPLESIZE;
+        int bottom =viewpoint.getWindow().bottom / BITMAP_INSAMPLESIZE;
+
+        //以下是设置放大中心点
+        int centerX = (right+left)/2;
+        int centerY = (bottom+top)/2;
+
         Rect src = new Rect(left, top, right, bottom);
-        Rect dst = new Rect(0,0,viewpoint.getWindow().width(),viewpoint.getWindow().height());
+        int scaleX = (int) (src.width()/2/viewpoint.getScale());
+        int scaleY = (int) (src.height()/2/viewpoint.getScale());
+
+        src.set(centerX-scaleX,centerY-scaleY,centerX+scaleX,centerY+scaleY);
+
+
+        Rect dst = new Rect(0, 0, viewpoint.getWindow().width(), viewpoint.getWindow().height());
         canvas.drawBitmap(mSampleBitmap, src, dst, new Paint());//绘制上去
     }
-
 
 
 }
