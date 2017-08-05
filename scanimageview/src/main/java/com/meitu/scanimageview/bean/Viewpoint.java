@@ -17,7 +17,7 @@ public class Viewpoint {
     private final Rect mWindowInOriginalBitmap;//在原图中窗口大小
     private final int mRealWidth;//真正的宽度
     private final int mRealHeight;//真正的高度
-    private float mScale = 1;//放大倍数
+    private float mScaleLevel = 1;//放大倍数
     private List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
     private float mblockSize;
     private Bitmap mThumbnail;
@@ -29,11 +29,15 @@ public class Viewpoint {
     public Viewpoint(int mRealWidth, int mRealHeight) {
         this.mRealHeight = mRealHeight;
         this.mRealWidth = mRealWidth;
-        mWindowInOriginalBitmap = new Rect(0,0,(int)(mRealWidth * mScale),(int)(mRealHeight * mScale));
+        mWindowInOriginalBitmap = new Rect(0,0,(int)(mRealWidth * mScaleLevel),(int)(mRealHeight * mScaleLevel));
         mblockSize = mRealWidth / 2 + (mRealWidth % 2) == 0 ? 1 : 0;
     }
 
 
+
+    public int getBlockSizeInOriginalBitmap(){
+        return (int) (mblockSize* mScaleLevel);
+    }
 
     public Rect getWindowInOriginalBitmap() {
         return mWindowInOriginalBitmap;
@@ -52,8 +56,12 @@ public class Viewpoint {
         return mBlockBitmapList;
     }
 
-    public void setScale(float mScale) {
-        this.mScale = mScale;
+    public void setScaleLevel(float mScale) {
+        this.mScaleLevel = mScale;
+    }
+
+    public float getScaleLevel() {
+        return mScaleLevel;
     }
 
     public void setThumbnail(Bitmap mThumbnail) {
@@ -86,7 +94,7 @@ public class Viewpoint {
 
     public void postScaleWindow(float scaleFactor) {
         Log.d(TAG,"scaleFactor"+scaleFactor);
-        mScale *= scaleFactor;
+        mScaleLevel *= scaleFactor;
         float dScale = 1-scaleFactor;
         int centerX = mWindowInOriginalBitmap.centerX();
         int centerY = mWindowInOriginalBitmap.centerY();
