@@ -63,7 +63,7 @@ public abstract class AbsScene {
     }
 
     public void postScaleViewPointWindow(float scaleFactor) {
-         mViewpoint.scale *=scaleFactor;//相乘
+        mViewpoint.scale *= scaleFactor;//相乘
     }
 
 
@@ -81,12 +81,7 @@ public abstract class AbsScene {
 
     }
 
-    /**
-     * 加载样例进入viewPointBitmap
-     *
-     * @param bitmap          viewPoint 的Bitmap
-     * @param viewpointWindow
-     */
+
     protected abstract void loadSampleBitmapToViewpoint(Bitmap bitmap, Viewpoint viewpoint);
 
 

@@ -9,6 +9,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
 import com.meitu.scanimageview.ScanPhotoView;
+import com.meitu.scanimageview.tools.InputStreamBitmapDecoderFactory;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 
 /**
