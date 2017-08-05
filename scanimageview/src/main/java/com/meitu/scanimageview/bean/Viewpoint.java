@@ -12,7 +12,6 @@ import java.util.List;
 
 public class Viewpoint {
 
-    private final Rect mWindow;
     private final Rect mWindowInOriginalBitmap;//在原图中窗口大小
     private final int mRealWidth;//真正的宽度
     private final int mRealHeight;//真正的高度
@@ -28,10 +27,11 @@ public class Viewpoint {
     public Viewpoint(int mRealWidth, int mRealHeight) {
         this.mRealHeight = mRealHeight;
         this.mRealWidth = mRealWidth;
-        mWindow = new Rect(0,0,mRealWidth,mRealHeight);
         mWindowInOriginalBitmap = new Rect(0,0,(int)(mRealWidth * mScale),(int)(mRealHeight * mScale));
         mblockSize = mRealWidth / 2 + (mRealWidth % 2) == 0 ? 1 : 0;
     }
+
+
 
     public Rect getWindowInOriginalBitmap() {
         return mWindowInOriginalBitmap;
@@ -71,5 +71,14 @@ public class Viewpoint {
         if(blockBitmap!=null) {
             mBlockBitmapList.add(blockBitmap);
         }
+    }
+
+    public void moveWindow(float distanceX, float distanceY) {
+        int left = (int) (mWindowInOriginalBitmap.left + distanceX);
+        int right = (int) (mWindowInOriginalBitmap.right +distanceX);
+        int top = (int) (mWindowInOriginalBitmap.top + distanceY);
+        int bottom = (int) (mWindowInOriginalBitmap.bottom + distanceY);
+
+        mWindowInOriginalBitmap.set(left,top,right,bottom);
     }
 }

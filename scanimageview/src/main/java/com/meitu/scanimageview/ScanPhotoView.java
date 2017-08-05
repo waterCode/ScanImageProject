@@ -145,7 +145,33 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     private void moveTo(float distanceX, float distanceY) {
         // TODO: 2017/8/3 为什么是减
-        invalidate();
+        if(mViewPoint != null){
+            int[] realMove = getRealMove(distanceX, distanceY);//越界检查
+            mViewPoint.moveWindow(realMove[0],realMove[1]);
+            invalidate();
+        }
+    }
+
+    private int[] getRealMove(float distanceX, float distanceY) {
+        int[] move = new int[2];
+        Rect windowInOriginalBitmap = mViewPoint.getWindowInOriginalBitmap();
+        int[] widthAndHeight = mBitmapDecoderFactory.getImageWidthAndHeight();
+        if((windowInOriginalBitmap.left + distanceX) < 0){//左边界越界
+            distanceX = 0-windowInOriginalBitmap.left;
+        }
+        if((windowInOriginalBitmap.right + distanceX) > widthAndHeight[0]){//右边界越界
+            distanceX = widthAndHeight[0] - windowInOriginalBitmap.right;
+        }
+        if((windowInOriginalBitmap.top + distanceY) < 0){
+            //上边界越界
+            distanceY = 0 - windowInOriginalBitmap.top;
+        }
+        if((windowInOriginalBitmap.bottom +distanceY) > widthAndHeight[1]){
+            distanceY = widthAndHeight[1] - windowInOriginalBitmap.bottom;
+        }
+        move[0] = (int) distanceX;
+        move[1] = (int) distanceY;
+        return move;
     }
 
 
