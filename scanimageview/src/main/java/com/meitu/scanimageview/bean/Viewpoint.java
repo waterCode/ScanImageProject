@@ -12,10 +12,11 @@ import java.util.List;
 
 public class Viewpoint {
 
-    private final Rect window ;
+    private final Rect mWindow;
+    private final Rect mWindowInOriginalBitmap;//在原图中窗口大小
     private final int mRealWidth;//真正的宽度
     private final int mRealHeight;//真正的高度
-    private float mScale;//放大倍数
+    private float mScale = 1;//放大倍数
     private List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
     private float mblockSize;
     private Bitmap mThumbnail;
@@ -27,8 +28,13 @@ public class Viewpoint {
     public Viewpoint(int mRealWidth, int mRealHeight) {
         this.mRealHeight = mRealHeight;
         this.mRealWidth = mRealWidth;
-        window = new Rect(0,0,mRealWidth,mRealHeight);
+        mWindow = new Rect(0,0,mRealWidth,mRealHeight);
+        mWindowInOriginalBitmap = new Rect(0,0,(int)(mRealWidth * mScale),(int)(mRealHeight * mScale));
         mblockSize = mRealWidth / 2 + (mRealWidth % 2) == 0 ? 1 : 0;
+    }
+
+    public Rect getWindowInOriginalBitmap() {
+        return mWindowInOriginalBitmap;
     }
 
     public int getRealWidth() {
@@ -44,15 +50,22 @@ public class Viewpoint {
         return mBlockBitmapList;
     }
 
+    public void setScale(float mScale) {
+        this.mScale = mScale;
+    }
+
     public void setThumbnail(Bitmap mThumbnail) {
         if (mThumbnail != null) {
             this.mThumbnail = mThumbnail;
             mThumbnailBlock = new BlockBitmap(mThumbnail);
             mThumbnailBlock.setDstRect(0, 0, mRealWidth, mRealHeight);
-            addBitmapBlock(mThumbnailBlock);
         }
     }
 
+    //拿到缩略图模块
+    public BlockBitmap getmThumbnailBlock() {
+        return mThumbnailBlock;
+    }
 
     public void addBitmapBlock(BlockBitmap blockBitmap){
         if(blockBitmap!=null) {

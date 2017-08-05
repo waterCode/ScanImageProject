@@ -43,4 +43,8 @@ public class BlockBitmap {
     public void setDstRect(int left, int top, int right , int bottom){
         dst.set(left,top,right,bottom);
     }
+
+    public void setSrcRect(int left, int top, int right , int bottom){
+        src.set(left,top,right,bottom);
+    }
 }
