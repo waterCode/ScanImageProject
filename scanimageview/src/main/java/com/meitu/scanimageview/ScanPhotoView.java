@@ -69,8 +69,8 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView{
         if(uri != null){
 
         try {
-            InputStream inputStream = getContext().getContentResolver().openInputStream(uri);
-            mBitmapDecoderFactory = new InputStreamBitmapDecoderFactory(inputStream);//创建一个解码器
+
+            mBitmapDecoderFactory = new InputStreamBitmapDecoderFactory(getContext(),uri);//创建一个解码器
             mBitmapRegionDecoder = mBitmapDecoderFactory.made();
 
         } catch (FileNotFoundException e) {
@@ -94,6 +94,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView{
     protected void onDraw(Canvas canvas) {
         if(mViewPoint != null){
             List<BlockBitmap> blockBitmapList = mViewPoint.getBlockBitmapList();
+
             for(BlockBitmap blockBitmap:blockBitmapList){
                 canvas.drawBitmap(blockBitmap.getBitmap(),blockBitmap.getSrc(),blockBitmap.getDst(),null);
             }
@@ -119,7 +120,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView{
     }
     private void moveTo(float distanceX, float distanceY) {
         // TODO: 2017/8/3 为什么是减
-        postInvalidate();
+        invalidate();
     }
 
 

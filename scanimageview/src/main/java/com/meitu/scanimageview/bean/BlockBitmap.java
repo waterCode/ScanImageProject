@@ -21,6 +21,13 @@ public class BlockBitmap {
 
     }
 
+    public BlockBitmap(Bitmap bmp){
+        if(bmp != null) {
+            mBitmap = bmp;
+            src.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+        }
+    }
+
     public Bitmap getBitmap() {
         return mBitmap;
     }
@@ -31,13 +38,6 @@ public class BlockBitmap {
 
     public Rect getDst() {
         return dst;
-    }
-
-    public BlockBitmap(Bitmap bmp){
-        if(mBitmap != null) {
-            mBitmap = bmp;
-            src.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
-        }
     }
 
     public void setDstRect(int left, int top, int right , int bottom){

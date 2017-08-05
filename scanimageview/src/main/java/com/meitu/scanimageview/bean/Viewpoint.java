@@ -45,15 +45,18 @@ public class Viewpoint {
     }
 
     public void setThumbnail(Bitmap mThumbnail) {
-        this.mThumbnail = mThumbnail;
-        mThumbnailBlock = new BlockBitmap(mThumbnail);
-        mThumbnailBlock.setDstRect(0,0,mRealWidth,mRealHeight);
+        if (mThumbnail != null) {
+            this.mThumbnail = mThumbnail;
+            mThumbnailBlock = new BlockBitmap(mThumbnail);
+            mThumbnailBlock.setDstRect(0, 0, mRealWidth, mRealHeight);
+            addBitmapBlock(mThumbnailBlock);
+        }
     }
 
 
     public void addBitmapBlock(BlockBitmap blockBitmap){
-        if(mThumbnail!=null) {
-            mBlockBitmapList.add(mThumbnailBlock);
+        if(blockBitmap!=null) {
+            mBlockBitmapList.add(blockBitmap);
         }
     }
 }
