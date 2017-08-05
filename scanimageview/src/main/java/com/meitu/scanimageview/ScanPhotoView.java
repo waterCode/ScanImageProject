@@ -138,7 +138,10 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private class ScaleGestureListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            invalidate();
+            if(mViewPoint != null){
+                mViewPoint.postScaleWindow(detector.getScaleFactor());
+                invalidate();
+            }
             return true;
         }
     }

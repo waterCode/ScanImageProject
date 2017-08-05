@@ -2,6 +2,7 @@ package com.meitu.scanimageview.bean;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 
 public class Viewpoint {
 
+    private static final String TAG =Viewpoint.class.getSimpleName();
     private final Rect mWindowInOriginalBitmap;//在原图中窗口大小
     private final int mRealWidth;//真正的宽度
     private final int mRealHeight;//真正的高度
@@ -79,6 +81,25 @@ public class Viewpoint {
         int top = (int) (mWindowInOriginalBitmap.top + distanceY);
         int bottom = (int) (mWindowInOriginalBitmap.bottom + distanceY);
 
+        mWindowInOriginalBitmap.set(left,top,right,bottom);
+    }
+
+    public void postScaleWindow(float scaleFactor) {
+        Log.d(TAG,"scaleFactor"+scaleFactor);
+        mScale *= scaleFactor;
+        float dScale = 1-scaleFactor;
+        int centerX = mWindowInOriginalBitmap.centerX();
+        int centerY = mWindowInOriginalBitmap.centerY();
+        //以中心点放大
+        int dx = (int) (mWindowInOriginalBitmap.width() *dScale);
+        int dy = (int) (mWindowInOriginalBitmap.height() * dScale);
+        Log.d(TAG,"dx"+dx);
+        Log.d(TAG,"dy"+dy);
+        int left = mWindowInOriginalBitmap.left - dx/2;
+        int right = mWindowInOriginalBitmap.right + dx/2;
+
+        int top = mWindowInOriginalBitmap.top - dy/2;
+        int bottom = mWindowInOriginalBitmap.bottom +dy/2;
         mWindowInOriginalBitmap.set(left,top,right,bottom);
     }
 }
