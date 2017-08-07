@@ -31,7 +31,7 @@ import java.util.List;
  * Created by zmc on 2017/8/3.
  */
 
-public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView implements LoadBlockBitmapCallback{
+public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView implements LoadBlockBitmapCallback {
 
     private String Tag = ScanPhotoView.class.getSimpleName();
     private GestureDetector mGestureDetector;
@@ -114,7 +114,21 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             if (mViewPoint.getmThumbnailBlock() != null) {
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
             }
-            getAllDetailBitmapBlock(mViewPoint);
+            getAllDetailBitmapBlock(mViewPoint);//拿到所有缓存中有的块
+            //为所有的块设置位置
+            updateAllBitmapBlock();
+            //遍历绘制上去
+            canvas.save();
+            float scaleCanvas =mViewPoint.getSampleScale()/mViewPoint.getScaleLevel();
+            canvas.scale(scaleCanvas,scaleCanvas);
+            List<BlockBitmap> shouldDrawBlockBitmapList = mViewPoint.getBlockBitmapList();
+            if (shouldDrawBlockBitmapList != null){
+                for (BlockBitmap block:shouldDrawBlockBitmapList){
+                    canvas.drawBitmap(block.getBitmap(),block.getSrc(),block.getDst(),null);
+                }
+            }
+            canvas.restore();
+
             /*Drawable drawable = getResources().getDrawable(R.drawable.ic_launcher);
             drawable.setBounds(-30,-30,42,42);
             drawable.draw(canvas);*/
@@ -123,6 +137,44 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     }
 
+    private void updateAllBitmapBlock() {
+        List<BlockBitmap> blockBitmapList = mViewPoint.getBlockBitmapList();
+        if (blockBitmapList != null) {
+            //获取
+            for (BlockBitmap blockBitmap : blockBitmapList) {
+                updateBitmapBlockSrcAndDstRect(blockBitmap, mViewPoint);//更新所有模块的区域
+            }
+        }
+    }
+
+
+    public void updateBitmapBlockSrcAndDstRect(BlockBitmap blockBitmap, Viewpoint viewpoint) {
+        Rect bitmapPosition = blockBitmap.getPositionInOriginBitmap(viewpoint.getBlockSize());
+        Rect viewpointPosition = viewpoint.getWindowInOriginalBitmap();
+        //求出src和dst
+        setBlockBitmapSrcAndDst(blockBitmap, bitmapPosition, viewpointPosition);
+    }
+
+    /**
+     * 设置绘制模块的src和dst
+     *
+     * @param blockBitmap       绘制模块
+     * @param bitmapPosition    图片相对原图区域
+     * @param viewpointPosition viewpoint相对原图区域
+     */
+    private void setBlockBitmapSrcAndDst(BlockBitmap blockBitmap, Rect bitmapPosition, Rect viewpointPosition) {
+
+        // TODO: 2017/8/7  建立在一定有相交区域情况下
+        //求出相交区域，
+        int left = (bitmapPosition.left > viewpointPosition.left) ? bitmapPosition.left : viewpointPosition.left;//取大的左边
+        int right = (bitmapPosition.right < viewpointPosition.right) ? bitmapPosition.right : viewpointPosition.right;//小的右边
+        int top = (bitmapPosition.top > viewpointPosition.top) ? bitmapPosition.top : viewpointPosition.top;
+        int bottom = (bitmapPosition.bottom < viewpointPosition.bottom) ? bitmapPosition.bottom : viewpointPosition.bottom;
+
+
+        blockBitmap.setSrcRect(left - bitmapPosition.left, top - bitmapPosition.top, right - bitmapPosition.left, bottom - bitmapPosition.top);
+        blockBitmap.setDstRect(left - viewpointPosition.left, top - viewpointPosition.top, right - viewpointPosition.left, bottom - viewpointPosition.top);
+    }
 
     /**
      * 获取所有的清晰模块
@@ -148,7 +200,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         int j;
         mViewPoint.getBlockBitmapList().clear();//使用前先清空
         for (; i < endRow; i++) {
-            for (j=startColumn; j < endColumn; j++) {
+            for (j = startColumn; j < endColumn; j++) {
                 //遍历每个位置，从缓存里面取，有就直接添加，没有就去开始一个任务去加载
                 BlockBitmap blockBitmap = getBlockBitmapFromLru(i, j, sampleScale);
                 if (blockBitmap == null) {//没有就开启一个任务去加载，异步的
@@ -162,18 +214,19 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
     }
 
-    private void startTask(int row, int column, int sampleScale ) {
+    private void startTask(int row, int column, int sampleScale) {
         if (mLoadBitmapTaskManager == null) {
             mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBlockBitmapLru, mBitmapRegionDecoder);
         }
         LoadBlockBitmapTaskManager.LoadBitmapTask loadBitmapTask;
         loadBitmapTask = new LoadBlockBitmapTaskManager.LoadBitmapTask(row, column, sampleScale);
+        loadBitmapTask.setLoadFinshedListener(this);
         mLoadBitmapTaskManager.summitTask(loadBitmapTask);
     }
 
 
-    private BlockBitmap getBlockBitmapFromLru(int row, int column, float scaleLevel) {
-        BlockBitmap.Position key = new BlockBitmap.Position(row, column, scaleLevel);
+    private BlockBitmap getBlockBitmapFromLru(int row, int column, int sampleScale) {
+        BlockBitmap.Position key = new BlockBitmap.Position(row, column, sampleScale);
 
         BlockBitmap blockBitmap = mBlockBitmapLru.get(key);
         //设置绘制区域
@@ -211,6 +264,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     @Override
     public void onLoadFinished() {
+        Log.d(Tag,"load one bitmap block finished");
         postInvalidate();
     }
 

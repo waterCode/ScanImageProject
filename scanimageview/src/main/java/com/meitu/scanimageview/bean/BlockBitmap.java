@@ -2,7 +2,6 @@ package com.meitu.scanimageview.bean;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
-import android.util.Log;
 
 /**
  * Created by zmc on 2017/8/4.
@@ -15,6 +14,8 @@ public class BlockBitmap {
 
     private final Rect src = new Rect();//在原图的位置
     private final Rect dst = new Rect();//需要画在原图的区域
+
+    private Rect mPositionInOriginBitmap = new Rect();
 
     public BlockBitmap(int width, int height) {
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -50,8 +51,8 @@ public class BlockBitmap {
     }
 
     public void setPosition(int row, int column, int sampleScale) {
-        mPosition.row=row;
-        mPosition.column=column;
+        mPosition.row = row;
+        mPosition.column = column;
         mPosition.sampleScale = sampleScale;
     }
 
@@ -59,19 +60,29 @@ public class BlockBitmap {
         return mPosition;
     }
 
+    public Rect getPositionInOriginBitmap(int blockSize) {
+        int left = blockSize * mPosition.column * mPosition.sampleScale;
+        int top = blockSize * mPosition.row * mPosition.sampleScale;
+        int right = left + blockSize * mPosition.sampleScale;
+        int bottom = blockSize * mPosition.sampleScale;
+        //通过position，获取
+        mPositionInOriginBitmap.set(left,top,right,bottom);
+        return mPositionInOriginBitmap;
+    }
+
     public static class Position {
         int row;
         int column;
-        float sampleScale;
+        int sampleScale;
 
 
         public Position() {
         }
 
-        public Position(int row, int column, float level) {
+        public Position(int row, int column, int sampleScale) {
             this.row = row;
             this.column = column;
-            this.sampleScale = level;
+            this.sampleScale = sampleScale;
         }
 
         @Override
@@ -94,7 +105,7 @@ public class BlockBitmap {
             int iConstant = 17;
             iTotal = iTotal * iConstant + row;
             iTotal = iTotal * iConstant + column;
-            iTotal = (int) (iTotal * iConstant + sampleScale *100);
+            iTotal = (int) (iTotal * iConstant + sampleScale * 100);
             //Log.d("Position","hashCode"+iTotal);
             return iTotal;
         }
@@ -107,7 +118,7 @@ public class BlockBitmap {
             return column;
         }
 
-        public float getSampleScale() {
+        public int getSampleScale() {
             return sampleScale;
         }
     }

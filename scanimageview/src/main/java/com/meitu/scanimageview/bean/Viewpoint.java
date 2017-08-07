@@ -47,6 +47,10 @@ public class Viewpoint {
         return mBlockSize * getSampleScale();
     }
 
+    public int getBlockSize(){
+        return mBlockSize;
+    }
+
     public Rect getWindowInOriginalBitmap() {
         mMatrix.mapRect(mWindowInOriginalBitmapRecF, mStartWindow);
         transFormRectToRectF(mWindowInOriginalBitmap, mWindowInOriginalBitmapRecF);
