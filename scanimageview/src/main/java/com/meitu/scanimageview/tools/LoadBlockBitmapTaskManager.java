@@ -62,7 +62,7 @@ public class LoadBlockBitmapTaskManager {
             mBlockBitmapLruCache = blockBitmapLruCache;
         }
 
-        public void setLoadFinshedListener(LoadBlockBitmapCallback loadBlockBitmapCallback){
+        public void setLoadFinshedListener(LoadBlockBitmapCallback loadBlockBitmapCallback) {
             mLoadBlockBitmapCallback = loadBlockBitmapCallback;
         }
 
@@ -72,8 +72,8 @@ public class LoadBlockBitmapTaskManager {
                 //加载图片
                 Rect bitmapRegionRect = mViewpoint.getRect(row, column, sampleScale);
                 Log.d(TAG, "开始加载图片块" + "所在行为" + row + ",列：" + column + "sampleScale:" + sampleScale
-                            +",加载区域为："+bitmapRegionRect.toString());
-                Log.d(TAG,"当前样例图片放大水平"+mViewpoint.getScaleLevel());
+                        + ",加载区域为：" + bitmapRegionRect.toString());
+                Log.d(TAG, "当前样例图片放大水平" + mViewpoint.getScaleLevel());
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = sampleScale;
@@ -86,7 +86,7 @@ public class LoadBlockBitmapTaskManager {
                 BlockBitmap blockBitmap = new BlockBitmap(bmp);
                 blockBitmap.setPosition(row, column, sampleScale);
                 mBlockBitmapLruCache.put(blockBitmap.getPosition(), blockBitmap);
-                if(mLoadBlockBitmapCallback != null){
+                if (mLoadBlockBitmapCallback != null) {
                     mLoadBlockBitmapCallback.onLoadFinished();
                 }
 

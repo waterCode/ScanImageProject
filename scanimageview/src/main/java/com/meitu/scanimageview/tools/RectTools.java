@@ -7,7 +7,7 @@ import android.graphics.Rect;
  */
 public class RectTools {
 
-    Rect[] getSrcDstRect(Rect src,Rect dst){
+    Rect[] getSrcDstRect(Rect src, Rect dst) {
         return null;
     }
 

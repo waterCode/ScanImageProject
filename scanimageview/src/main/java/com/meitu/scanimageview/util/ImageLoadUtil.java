@@ -55,23 +55,18 @@ public class ImageLoadUtil {
     }
 
 
-
-    public static Rect calculateBitmapSize(ContentResolver contentResolver, Uri uri) throws IOException{
+    public static Rect calculateBitmapSize(ContentResolver contentResolver, Uri uri) throws IOException {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         InputStream in = contentResolver.openInputStream(uri);
-        if(in !=null){
-            BitmapFactory.decodeStream(in,null,options);
+        if (in != null) {
+            BitmapFactory.decodeStream(in, null, options);
             in.close();
         }
         Rect rect = new Rect();
-        rect.set(0,0,options.outWidth,options.outHeight);
+        rect.set(0, 0, options.outWidth, options.outHeight);
         return rect;
     }
-
-
-
-
 
 
     /**

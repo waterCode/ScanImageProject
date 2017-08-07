@@ -47,7 +47,7 @@ public class Viewpoint {
         return mBlockSize * getSampleScale();
     }
 
-    public int getBlockSize(){
+    public int getBlockSize() {
         return mBlockSize;
     }
 
@@ -146,29 +146,29 @@ public class Viewpoint {
      * @return true 可见
      */
     public boolean checkIsVisiable(int row, int column, int scaleLevel) {
-        Rect region = getRect(row,column,scaleLevel);
+        Rect region = getRect(row, column, scaleLevel);
         return region.intersect(mWindowInOriginalBitmap);
     }
 
     public Rect getRect(int row, int column, int sampleScale) {
-        int left = mBlockSize*sampleScale*column;
-        int top = mBlockSize * sampleScale*row;
-        int right = left+sampleScale*mBlockSize;
-        int bottom = top +sampleScale * mBlockSize;
-        return new Rect(left,top,right,bottom);
+        int left = mBlockSize * sampleScale * column;
+        int top = mBlockSize * sampleScale * row;
+        int right = left + sampleScale * mBlockSize;
+        int bottom = top + sampleScale * mBlockSize;
+        return new Rect(left, top, right, bottom);
     }
 
     public void checkBitmapRegion(Rect bitmapRegionRect) {
-        if(bitmapRegionRect.left<0){
-            bitmapRegionRect.left=0;
+        if (bitmapRegionRect.left < 0) {
+            bitmapRegionRect.left = 0;
         }
-        if(bitmapRegionRect.top <0){
-            bitmapRegionRect.top =0;
+        if (bitmapRegionRect.top < 0) {
+            bitmapRegionRect.top = 0;
         }
-        if (bitmapRegionRect.right>originalBitmap.right){
+        if (bitmapRegionRect.right > originalBitmap.right) {
             bitmapRegionRect.right = originalBitmap.right;
         }
-        if(bitmapRegionRect.bottom>originalBitmap.bottom){
+        if (bitmapRegionRect.bottom > originalBitmap.bottom) {
             bitmapRegionRect.bottom = originalBitmap.bottom;
         }
 

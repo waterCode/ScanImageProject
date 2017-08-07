@@ -61,14 +61,13 @@ public class BlockBitmap {
     }
 
 
-
     public Rect getPositionInOriginBitmap(int blockSize) {
         int left = blockSize * mPosition.column * mPosition.sampleScale;
         int top = blockSize * mPosition.row * mPosition.sampleScale;
         int right = left + blockSize * mPosition.sampleScale;
-        int bottom = blockSize * mPosition.sampleScale+top;
+        int bottom = blockSize * mPosition.sampleScale + top;
         //通过position，获取
-        mPositionInOriginBitmap.set(left,top,right,bottom);
+        mPositionInOriginBitmap.set(left, top, right, bottom);
         return mPositionInOriginBitmap;
     }
 
@@ -116,7 +115,7 @@ public class BlockBitmap {
             int iConstant = 17;
             iTotal = iTotal * iConstant + row;
             iTotal = iTotal * iConstant + column;
-            iTotal = (int) (iTotal * iConstant + sampleScale * 100);
+            iTotal = iTotal * iConstant + sampleScale * 100;
             //Log.d("Position","hashCode"+iTotal);
             return iTotal;
         }

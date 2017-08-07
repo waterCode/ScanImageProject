@@ -64,10 +64,10 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         init();
     }
 
-    public void testScale(){
-        float scale = (1/mCurrentScaled);
-        float scaleFactor = scale/2;
-        onScale(scaleFactor,0,0);
+    public void testScale() {
+        float scale = (1 / mCurrentScaled);
+        float scaleFactor = scale / 2;
+        onScale(scaleFactor, 0, 0);
     }
 
 
@@ -126,13 +126,13 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             updateAllBitmapBlock();
             //遍历绘制上去
             canvas.save();
-            float scaleCanvas =mViewPoint.getSampleScale()/mViewPoint.getScaleLevel();
-            canvas.scale(scaleCanvas,scaleCanvas);
+            float scaleCanvas = mViewPoint.getSampleScale() / mViewPoint.getScaleLevel();
+            canvas.scale(scaleCanvas, scaleCanvas);
             List<BlockBitmap> shouldDrawBlockBitmapList = mViewPoint.getBlockBitmapList();
-            if (shouldDrawBlockBitmapList != null){
-                for (BlockBitmap block:shouldDrawBlockBitmapList){
-                    Log.d(Tag,"开始绘制图片("+block.getPosition().toString()+")"+"src "+block.getSrc().toString()+" ,dst"+block.getDst().toString());
-                    canvas.drawBitmap(block.getBitmap(),block.getSrc(),block.getDst(),null);
+            if (shouldDrawBlockBitmapList != null) {
+                for (BlockBitmap block : shouldDrawBlockBitmapList) {
+                    Log.d(Tag, "开始绘制图片(" + block.getPosition().toString() + ")" + "src " + block.getSrc().toString() + " ,dst" + block.getDst().toString());
+                    canvas.drawBitmap(block.getBitmap(), block.getSrc(), block.getDst(), null);
                 }
             }
             canvas.restore();
@@ -157,7 +157,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
 
     public void updateBitmapBlockSrcAndDstRect(BlockBitmap blockBitmap, Viewpoint viewpoint) {
-        if(blockBitmap.getPosition().getColumn()==0 &&blockBitmap.getPosition().getRow()==1){
+        if (blockBitmap.getPosition().getColumn() == 0 && blockBitmap.getPosition().getRow() == 1) {
             System.currentTimeMillis();
         }
         Rect bitmapPosition = blockBitmap.getPositionInOriginBitmap(viewpoint.getBlockSize());
@@ -183,8 +183,8 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         int bottom = (bitmapPosition.bottom < viewpointPosition.bottom) ? bitmapPosition.bottom : viewpointPosition.bottom;
 
         int sampleScale = blockBitmap.getPosition().getSampleScale();
-        blockBitmap.setSrcRect((left - bitmapPosition.left)/sampleScale, (top - bitmapPosition.top)/sampleScale, (right - bitmapPosition.left)/sampleScale, (bottom - bitmapPosition.top)/sampleScale);
-        blockBitmap.setDstRect((left - viewpointPosition.left)/sampleScale, (top - viewpointPosition.top)/sampleScale, (right - viewpointPosition.left)/sampleScale, (bottom - viewpointPosition.top)/sampleScale);
+        blockBitmap.setSrcRect((left - bitmapPosition.left) / sampleScale, (top - bitmapPosition.top) / sampleScale, (right - bitmapPosition.left) / sampleScale, (bottom - bitmapPosition.top) / sampleScale);
+        blockBitmap.setDstRect((left - viewpointPosition.left) / sampleScale, (top - viewpointPosition.top) / sampleScale, (right - viewpointPosition.left) / sampleScale, (bottom - viewpointPosition.top) / sampleScale);
     }
 
     /**
@@ -275,7 +275,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     @Override
     public void onLoadFinished() {
-        Log.d(Tag,"load one bitmap block finished");
+        Log.d(Tag, "load one bitmap block finished");
         postInvalidate();
     }
 
@@ -293,13 +293,13 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             float scaleFactor = detector.getScaleFactor();//放大因子
-            ScanPhotoView.this.onScale(scaleFactor,detector.getFocusX(),detector.getFocusY());
+            ScanPhotoView.this.onScale(scaleFactor, detector.getFocusX(), detector.getFocusY());
             return true;
         }
     }
 
 
-    public void onScale(float scaleFactor,float sx, float sy){
+    public void onScale(float scaleFactor, float sx, float sy) {
 
         if ((mCurrentScaled * scaleFactor) < mMinScale) {//防止缩小到过小限制缩小倍数
             scaleFactor = mMinScale / mCurrentScaled;
@@ -320,6 +320,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             invalidate();
         }
     }
+
     private void moveTo(int distanceX, int distanceY) {
         if (mViewPoint != null) {
             // TODO: 2017/8/7 bug估计是精度转换出现的问题
