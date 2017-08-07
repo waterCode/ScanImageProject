@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,13 +38,13 @@ public class Viewpoint {
         this.mRealWidth = mRealWidth;
         mStartWindow = new RectF(0, 0, (mRealWidth), (mRealHeight));
         originalBitmap = new Rect(0, 0, imageWidthAndHeight[0], imageWidthAndHeight[1]);//原图的大小
-        mBlockSize = mRealWidth / 2 + (mRealWidth % 2) == 0 ? 1 : 0;
+        mBlockSize = mRealWidth / 2 + ((mRealWidth % 2) == 0 ? 1 : 0);
 
     }
 
 
     public int getBlockSizeInOriginalBitmap() {
-        return (int) (mBlockSize * getSampleScale());
+        return mBlockSize * getSampleScale();
     }
 
     public Rect getWindowInOriginalBitmap() {
@@ -78,7 +77,6 @@ public class Viewpoint {
     public void setScaleLevel(float mScale) {
         this.mScaleLevel = mScale;
     }
-
 
 
     // 2表示1/2,4表示1/4，只会是2的倍数
@@ -147,7 +145,11 @@ public class Viewpoint {
         return true;
     }
 
-    public Rect getRect(int row, int column, float scaleLevel) {
-        return null;
+    public Rect getRect(int row, int column, int sampleScale) {
+        int left = mBlockSize*sampleScale*column;
+        int top = mBlockSize * sampleScale*row;
+        int right = left+sampleScale*mBlockSize;
+        int bottom = top +sampleScale * mBlockSize;
+        return new Rect(left,top,right,bottom);
     }
 }

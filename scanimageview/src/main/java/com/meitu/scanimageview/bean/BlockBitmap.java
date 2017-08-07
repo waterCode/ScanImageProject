@@ -1,7 +1,6 @@
 package com.meitu.scanimageview.bean;
 
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.graphics.Rect;
 
 /**
@@ -49,17 +48,20 @@ public class BlockBitmap {
         src.set(left, top, right, bottom);
     }
 
-    public void setPosition(int row, int column, int level) {
-
+    public void setPosition(int row, int column, int sampleScale) {
+        mPosition.row=row;
+        mPosition.column=column;
+        mPosition.sampleScale = sampleScale;
     }
 
-
-
+    public Position getPosition() {
+        return mPosition;
+    }
 
     public static class Position {
         int row;
         int column;
-        float level;
+        float sampleScale;
 
 
         public Position() {
@@ -68,14 +70,14 @@ public class BlockBitmap {
         public Position(int row, int column, float level) {
             this.row = row;
             this.column = column;
-            this.level = level;
+            this.sampleScale = level;
         }
 
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof Position) {
                 Position target = (Position) obj;
-                if (this.row == target.getRow() && this.column == target.getColumn() && this.level == target.getLevel()) {
+                if (this.row == target.getRow() && this.column == target.getColumn() && this.sampleScale == target.getSampleScale()) {
                     return true;
                 } else {
                     return false;
@@ -91,7 +93,7 @@ public class BlockBitmap {
             int iConstant = 37;
             iTotal = iTotal * iConstant + row;
             iTotal = iTotal * iConstant + column;
-            iTotal = (int) (iTotal * iConstant + level*10);
+            iTotal = (int) (iTotal * iConstant + sampleScale *10);
             return iTotal;
         }
 
@@ -103,8 +105,8 @@ public class BlockBitmap {
             return column;
         }
 
-        public float getLevel() {
-            return level;
+        public float getSampleScale() {
+            return sampleScale;
         }
     }
 }

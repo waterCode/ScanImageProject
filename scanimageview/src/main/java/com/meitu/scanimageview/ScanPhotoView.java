@@ -8,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
@@ -17,7 +16,6 @@ import android.util.LruCache;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.widget.ImageView;
 
 import com.meitu.scanimageview.bean.BlockBitmap;
 import com.meitu.scanimageview.bean.Viewpoint;
@@ -43,7 +41,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private float mMinScale;
     private float mCurrentScaled;
 
-    private Rect mThumbnailRect;
     LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLru = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().freeMemory() / 4)) {
         @Override
         protected int sizeOf(BlockBitmap.Position key, BlockBitmap value) {
@@ -116,7 +113,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             if (mViewPoint.getmThumbnailBlock() != null) {
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
             }
-            //getAllDetailBitmapBlock(mViewPoint);
+            getAllDetailBitmapBlock(mViewPoint);
             /*Drawable drawable = getResources().getDrawable(R.drawable.ic_launcher);
             drawable.setBounds(-30,-30,42,42);
             drawable.draw(canvas);*/
@@ -139,7 +136,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     }
 
 
-    private void getAllAvailableBlock(Point[] startAndEnd, float sampleScale) {
+    private void getAllAvailableBlock(Point[] startAndEnd, int sampleScale) {
         int startRow = startAndEnd[0].y;
         int startColumn = startAndEnd[0].x;
         int endRow = startAndEnd[1].y;
@@ -164,12 +161,12 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
     }
 
-    private void startTask(int row, int column, float scaleLevel) {
+    private void startTask(int row, int column, int sampleScale ) {
         if (mLoadBitmapTaskManager == null) {
             mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBlockBitmapLru, mBitmapRegionDecoder);
         }
         LoadBlockBitmapTaskManager.LoadBitmapTask loadBitmapTask;
-        loadBitmapTask = mLoadBitmapTaskManager.new LoadBitmapTask(row, column, scaleLevel);
+        loadBitmapTask = new LoadBlockBitmapTaskManager.LoadBitmapTask(row, column, sampleScale);
         mLoadBitmapTaskManager.summitTask(loadBitmapTask);
     }
 
@@ -200,10 +197,14 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         int endRow = viewpointWindow.right / blockLength + 1;
         int endColumn = viewpointWindow.bottom / blockLength + 1;
         Point[] point = new Point[2];
-        point[0].y = startRow;
-        point[0].x = startColumn;
-        point[1].y = endRow;
-        point[2].x = endColumn;
+        Point pointStart = new Point();
+        pointStart.y = startRow;
+        pointStart.x = startColumn;
+        Point pointEnd = new Point();
+        pointEnd.y = endRow;
+        pointEnd.x = endColumn;
+        point[0] = pointStart;
+        point[1] = pointEnd;
         return point;
     }
 
@@ -212,7 +213,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            moveTo((int)distanceX, (int)distanceY);
+            moveTo((int) distanceX, (int) distanceY);
             return true;
         }
     }
@@ -272,8 +273,8 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             distanceY = widthAndHeight[1] - window.bottom;
         }
         Log.d(Tag, "实际移动distanceX" + distanceX);
-        move[0] = distanceX*mCurrentScaled;
-        move[1] = distanceY*mCurrentScaled;
+        move[0] = distanceX * mCurrentScaled;
+        move[1] = distanceY * mCurrentScaled;
         return move;
     }
 
@@ -296,7 +297,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 Rect rect = new Rect(0, 0, widthAndHeight[0], widthAndHeight[1]);
                 Bitmap thumbnailBitmap = mBitmapRegionDecoder.decodeRegion(rect, option);//缩略图
 
-                mThumbnailRect = new Rect(0,0,thumbnailBitmap.getWidth(),thumbnailBitmap.getHeight()); //设置显示图片初始的区域
 
                 initDisplayMatrixSetMinScale(thumbnailBitmap, mViewPoint, mThumbnailInSampleSize);//此时已经设置好最小缩放倍数
                 mViewPoint.setThumbnail(thumbnailBitmap);//设置缩略图
