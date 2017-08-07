@@ -21,6 +21,7 @@ import com.meitu.scanimageview.bean.BlockBitmap;
 import com.meitu.scanimageview.bean.Viewpoint;
 import com.meitu.scanimageview.tools.InputStreamBitmapDecoderFactory;
 import com.meitu.scanimageview.tools.LoadBlockBitmapTaskManager;
+import com.meitu.scanimageview.util.LoadBlockBitmapCallback;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import java.util.List;
  * Created by zmc on 2017/8/3.
  */
 
-public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView {
+public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView implements LoadBlockBitmapCallback{
 
     private String Tag = ScanPhotoView.class.getSimpleName();
     private GestureDetector mGestureDetector;
@@ -41,7 +42,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private float mMinScale;
     private float mCurrentScaled;
 
-    LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLru = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().freeMemory() / 4)) {
+    LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLru = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 4)) {
         @Override
         protected int sizeOf(BlockBitmap.Position key, BlockBitmap value) {
             return value.getBitmap().getByteCount();
@@ -144,10 +145,10 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
 
         int i = startRow;
-        int j = startColumn;
+        int j;
         mViewPoint.getBlockBitmapList().clear();//使用前先清空
         for (; i < endRow; i++) {
-            for (; j < endColumn; j++) {
+            for (j=startColumn; j < endColumn; j++) {
                 //遍历每个位置，从缓存里面取，有就直接添加，没有就去开始一个任务去加载
                 BlockBitmap blockBitmap = getBlockBitmapFromLru(i, j, sampleScale);
                 if (blockBitmap == null) {//没有就开启一个任务去加载，异步的
@@ -206,6 +207,11 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         point[0] = pointStart;
         point[1] = pointEnd;
         return point;
+    }
+
+    @Override
+    public void onLoadFinished() {
+        postInvalidate();
     }
 
 

@@ -2,6 +2,7 @@ package com.meitu.scanimageview.bean;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.util.Log;
 
 /**
  * Created by zmc on 2017/8/4.
@@ -89,11 +90,12 @@ public class BlockBitmap {
 
         @Override
         public int hashCode() {
-            int iTotal = 17;
-            int iConstant = 37;
+            int iTotal = 7;
+            int iConstant = 17;
             iTotal = iTotal * iConstant + row;
             iTotal = iTotal * iConstant + column;
-            iTotal = (int) (iTotal * iConstant + sampleScale *10);
+            iTotal = (int) (iTotal * iConstant + sampleScale *100);
+            //Log.d("Position","hashCode"+iTotal);
             return iTotal;
         }
 

@@ -9,6 +9,7 @@ import android.util.LruCache;
 
 import com.meitu.scanimageview.bean.BlockBitmap;
 import com.meitu.scanimageview.bean.Viewpoint;
+import com.meitu.scanimageview.util.LoadBlockBitmapCallback;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -45,6 +46,7 @@ public class LoadBlockBitmapTaskManager {
         private Viewpoint mViewpoint;
         private BitmapRegionDecoder mDecoder;
         LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLruCache;
+        private LoadBlockBitmapCallback mLoadBlockBitmapCallback;
 
         public LoadBitmapTask(int row, int column, int sampleScale) {
             super();
@@ -60,13 +62,19 @@ public class LoadBlockBitmapTaskManager {
             mBlockBitmapLruCache = blockBitmapLruCache;
         }
 
+        public void setLoadFinshedListener(LoadBlockBitmapCallback loadBlockBitmapCallback){
+            mLoadBlockBitmapCallback = loadBlockBitmapCallback;
+        }
 
         @Override
         public void run() {
             if (mViewpoint.checkIsVisiable(row, column, sampleScale)) {
                 //加载图片
-                Log.d(TAG, "开始加载图片块" + "所在行为" + row + ",列：" + column + "sampleScale:" + sampleScale);
                 Rect rect = mViewpoint.getRect(row, column, sampleScale);
+                Log.d(TAG, "开始加载图片块" + "所在行为" + row + ",列：" + column + "sampleScale:" + sampleScale
+                            +",加载区域为："+rect.toString());
+                Log.d(TAG,"当前样例图片放大水平"+mViewpoint.getScaleLevel());
+
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = sampleScale;
                 Bitmap bmp = mDecoder.decodeRegion(rect, options);
@@ -74,6 +82,10 @@ public class LoadBlockBitmapTaskManager {
                 BlockBitmap blockBitmap = new BlockBitmap(bmp);
                 blockBitmap.setPosition(row, column, sampleScale);
                 mBlockBitmapLruCache.put(blockBitmap.getPosition(), blockBitmap);
+                if(mLoadBlockBitmapCallback != null){
+                    mLoadBlockBitmapCallback.onLoadFinished();
+                }
+
             }
         }
     }
