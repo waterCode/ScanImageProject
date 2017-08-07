@@ -52,6 +52,8 @@ public class BlockBitmap {
     }
 
 
+
+
     public static class Position {
         int row;
         int column;
