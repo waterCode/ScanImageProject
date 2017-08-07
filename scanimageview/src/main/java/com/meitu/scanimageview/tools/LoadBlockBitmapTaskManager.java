@@ -70,15 +70,19 @@ public class LoadBlockBitmapTaskManager {
         public void run() {
             if (mViewpoint.checkIsVisiable(row, column, sampleScale)) {
                 //加载图片
-                Rect rect = mViewpoint.getRect(row, column, sampleScale);
+                Rect bitmapRegionRect = mViewpoint.getRect(row, column, sampleScale);
                 Log.d(TAG, "开始加载图片块" + "所在行为" + row + ",列：" + column + "sampleScale:" + sampleScale
-                            +",加载区域为："+rect.toString());
+                            +",加载区域为："+bitmapRegionRect.toString());
                 Log.d(TAG,"当前样例图片放大水平"+mViewpoint.getScaleLevel());
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = sampleScale;
-                Bitmap bmp = mDecoder.decodeRegion(rect, options);
+
+                mViewpoint.checkBitmapRegion(bitmapRegionRect);//检查越界问题
+
+                Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);
                 //放入Lru缓存
+
                 BlockBitmap blockBitmap = new BlockBitmap(bmp);
                 blockBitmap.setPosition(row, column, sampleScale);
                 mBlockBitmapLruCache.put(blockBitmap.getPosition(), blockBitmap);

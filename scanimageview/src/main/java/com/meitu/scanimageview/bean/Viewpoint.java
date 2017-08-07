@@ -156,4 +156,20 @@ public class Viewpoint {
         int bottom = top +sampleScale * mBlockSize;
         return new Rect(left,top,right,bottom);
     }
+
+    public void checkBitmapRegion(Rect bitmapRegionRect) {
+        if(bitmapRegionRect.left<0){
+            bitmapRegionRect.left=0;
+        }
+        if(bitmapRegionRect.top <0){
+            bitmapRegionRect.top =0;
+        }
+        if (bitmapRegionRect.right>originalBitmap.right){
+            bitmapRegionRect.right = originalBitmap.right;
+        }
+        if(bitmapRegionRect.bottom>originalBitmap.bottom){
+            bitmapRegionRect.bottom = originalBitmap.bottom;
+        }
+
+    }
 }
