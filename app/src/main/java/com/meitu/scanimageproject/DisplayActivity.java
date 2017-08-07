@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import com.meitu.scanimageview.ScanPhotoView;
 import com.meitu.scanimageview.tools.InputStreamBitmapDecoderFactory;
@@ -41,6 +42,11 @@ public class DisplayActivity extends AppCompatActivity {
         mScanImageView = (ScanPhotoView) findViewById(R.id.scan_imageView);
         mScanImageView.setImageURI(uri);
 
+    }
+
+    public void onClick(View view){
+        mScanImageView.testScale();
+        mScanImageView.invalidate();
     }
 
 

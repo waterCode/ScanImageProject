@@ -64,6 +64,13 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         init();
     }
 
+    public void testScale(){
+        float scale = (1/mCurrentScaled);
+        float scaleFactor = scale/2;
+        onScale(scaleFactor,0,0);
+    }
+
+
     private void init() {
         mGestureDetector = new GestureDetector(getContext(), new MoveGestureListener());
         mScaleGestureDetector = new ScaleGestureDetector(getContext(), new ScaleGestureListener());
@@ -286,28 +293,33 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             float scaleFactor = detector.getScaleFactor();//放大因子
-            if ((mCurrentScaled * scaleFactor) < mMinScale) {//防止缩小到过小限制缩小倍数
-                scaleFactor = mMinScale / mCurrentScaled;
-            }
-            Log.d(Tag, "ScaleFactor:" + scaleFactor);
-            Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
-            Log.d(Tag, "focusX：" + mCurrentScaled);
-            Log.d(Tag, "focusY：" + mCurrentScaled);
-
-            float focusX = 1f / mCurrentScaled * detector.getFocusX() + viewPointWindow.left;
-            float focusY = 1f / mCurrentScaled * detector.getFocusY() + viewPointWindow.top;
-
-            mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
-            mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
-            if (mViewPoint != null) {
-                mDisplayMatrix.postScale(scaleFactor, scaleFactor, detector.getFocusX(), detector.getFocusY());
-                mViewPoint.postScaleWindow(1f / scaleFactor, focusX, focusY);
-                invalidate();
-            }
+            ScanPhotoView.this.onScale(scaleFactor,detector.getFocusX(),detector.getFocusY());
             return true;
         }
     }
 
+
+    public void onScale(float scaleFactor,float sx, float sy){
+
+        if ((mCurrentScaled * scaleFactor) < mMinScale) {//防止缩小到过小限制缩小倍数
+            scaleFactor = mMinScale / mCurrentScaled;
+        }
+        Log.d(Tag, "ScaleFactor:" + scaleFactor);
+        Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
+        Log.d(Tag, "focusX：" + mCurrentScaled);
+        Log.d(Tag, "focusY：" + mCurrentScaled);
+
+        float focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;
+        float focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;
+
+        mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
+        mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
+        if (mViewPoint != null) {
+            mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);
+            mViewPoint.postScaleWindow(1f / scaleFactor, focusX, focusY);
+            invalidate();
+        }
+    }
     private void moveTo(int distanceX, int distanceY) {
         if (mViewPoint != null) {
             // TODO: 2017/8/7 bug估计是精度转换出现的问题
