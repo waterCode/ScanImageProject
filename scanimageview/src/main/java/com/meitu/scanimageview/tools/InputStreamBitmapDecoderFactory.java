@@ -8,6 +8,7 @@ import android.net.Uri;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 public class InputStreamBitmapDecoderFactory implements BitmapDecoderFactory {
 
@@ -52,6 +53,6 @@ public class InputStreamBitmapDecoderFactory implements BitmapDecoderFactory {
     @Override
     public int[] getImageWidthAndHeight() {
 
-        return mWidthAndheight;
+        return Arrays.copyOf(mWidthAndheight,mWidthAndheight.length);
     }
 }

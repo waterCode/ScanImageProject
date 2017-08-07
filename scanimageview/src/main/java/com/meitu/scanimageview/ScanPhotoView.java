@@ -33,7 +33,7 @@ import java.util.List;
 
 public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView implements LoadBlockBitmapCallback {
 
-    private String Tag = ScanPhotoView.class.getSimpleName();
+    private String TAG = ScanPhotoView.class.getSimpleName();
     private GestureDetector mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
     private BitmapRegionDecoder mBitmapRegionDecoder;
@@ -115,8 +115,8 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             //设置viewpoint的放大倍数
             //mViewPoint.setScaleLevel(mCurrentScale);
             Rect window = mViewPoint.getWindowInOriginalBitmap();
-            Log.d(Tag, "当前放大倍数" + mCurrentScaled);
-            Log.d(Tag, "当前viewPoint窗口位置" + "left:" + window.left + "top:" + window.top + "right:" + window.right + "bottom" + window.bottom
+            Log.d(TAG, "当前放大倍数" + mCurrentScaled);
+            Log.d(TAG, "当前viewPoint窗口位置" + "left:" + window.left + "top:" + window.top + "right:" + window.right + "bottom" + window.bottom
                     + "width:" + window.width() + "height" + window.height());
             if (mViewPoint.getmThumbnailBlock() != null) {
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
@@ -131,7 +131,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             List<BlockBitmap> shouldDrawBlockBitmapList = mViewPoint.getBlockBitmapList();
             if (shouldDrawBlockBitmapList != null) {
                 for (BlockBitmap block : shouldDrawBlockBitmapList) {
-                    Log.d(Tag, "开始绘制图片(" + block.getPosition().toString() + ")" + "src " + block.getSrc().toString() + " ,dst" + block.getDst().toString());
+                    Log.d(TAG, "开始绘制图片(" + block.getPosition().toString() + ")" + "src " + block.getSrc().toString() + " ,dst" + block.getDst().toString());
                     canvas.drawBitmap(block.getBitmap(), block.getSrc(), block.getDst(), null);
                 }
             }
@@ -275,7 +275,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     @Override
     public void onLoadFinished() {
-        Log.d(Tag, "load one bitmap block finished");
+        Log.d(TAG, "load one bitmap block finished");
         postInvalidate();
     }
 
@@ -293,7 +293,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             int dx = (int) (e2.getX() - e1.getX());
             int dy = (int) (e2.getY() - e1.getY());
-            Log.d(Tag, "onFling" + ",dx::" + dx + ",dy::" + dy);
+            Log.d(TAG, "onFling" + ",dx::" + dx + ",dy::" + dy);
 
             return true;
         }
@@ -301,7 +301,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         @Override
         public boolean onDoubleTap(MotionEvent e) {
             //动画放大到最大，再点击，回到最小
-            Log.d(Tag, "doubleTab");
+            Log.d(TAG, "doubleTab");
             float goalScale;
             if ((mMaxScale - mCurrentScaled) < 0.2) {
                 //返回到最小
@@ -349,16 +349,16 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         if ((mCurrentScaled * scaleFactor) > mMaxScale) {//大于最大倍数
             scaleFactor = mMaxScale / mCurrentScaled;
         }
-        Log.d(Tag, "ScaleFactor:" + scaleFactor);
+        Log.d(TAG, "ScaleFactor:" + scaleFactor);
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
-        Log.d(Tag, "focusX：" + mCurrentScaled);
-        Log.d(Tag, "focusY：" + mCurrentScaled);
+        Log.d(TAG, "focusX：" + mCurrentScaled);
+        Log.d(TAG, "focusY：" + mCurrentScaled);
 
         float focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;
         float focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;
 
         mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
-        Log.d(Tag, "currentScale:" + mCurrentScaled);
+        Log.d(TAG, "currentScale:" + mCurrentScaled);
         mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
         if (mViewPoint != null) {
             mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);
@@ -381,8 +381,8 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         float[] move = new float[2];
         Rect window = mViewPoint.getWindowInOriginalBitmap();
         int[] widthAndHeight = mBitmapDecoderFactory.getImageWidthAndHeight();
-        Log.d(Tag, "当前left" + window.left);
-        Log.d(Tag, "可能移动distanceX" + distanceX);
+        Log.d(TAG, "当前left" + window.left);
+        Log.d(TAG, "可能移动distanceX" + distanceX);
         if ((window.left + distanceX) < 0) {
             distanceX = 0 - window.left;
         }
@@ -395,7 +395,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         if ((window.bottom + distanceY > widthAndHeight[1])) {
             distanceY = widthAndHeight[1] - window.bottom;
         }
-        Log.d(Tag, "实际移动distanceX" + distanceX);
+        Log.d(TAG, "实际移动distanceX" + distanceX);
         move[0] = distanceX * mCurrentScaled;
         move[1] = distanceY * mCurrentScaled;
         return move;
