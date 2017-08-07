@@ -145,8 +145,9 @@ public class Viewpoint {
      * @param scaleLevel 放大几倍
      * @return true 可见
      */
-    public boolean checkIsVisiable(int row, int column, float scaleLevel) {
-        return true;
+    public boolean checkIsVisiable(int row, int column, int scaleLevel) {
+        Rect region = getRect(row,column,scaleLevel);
+        return region.intersect(mWindowInOriginalBitmap);
     }
 
     public Rect getRect(int row, int column, int sampleScale) {

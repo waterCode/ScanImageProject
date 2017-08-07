@@ -78,7 +78,7 @@ public class LoadBlockBitmapTaskManager {
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = sampleScale;
 
-                mViewpoint.checkBitmapRegion(bitmapRegionRect);//检查越界问题
+                mViewpoint.checkBitmapRegion(bitmapRegionRect);//检查越界问题,如果越界取图片会造成崩溃
 
                 Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);
                 //放入Lru缓存
