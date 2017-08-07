@@ -24,7 +24,6 @@ import com.meitu.scanimageview.tools.InputStreamBitmapDecoderFactory;
 import com.meitu.scanimageview.tools.LoadBlockBitmapTaskManager;
 import com.meitu.scanimageview.util.LoadBlockBitmapCallback;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -43,6 +42,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private float mMinScale;
     private float mCurrentScaled;
     private float mMaxScale = 3;
+    public static final int DEFAULT_ANIMATION_TIME = 400;
 
     LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLru = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 4)) {
         @Override
@@ -95,8 +95,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 mBitmapDecoderFactory = new InputStreamBitmapDecoderFactory(getContext(), uri);//创建一个解码器
                 mBitmapRegionDecoder = mBitmapDecoderFactory.made();
 
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -254,11 +252,11 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     private Point[] getStartAndEndPosition(Viewpoint mViewPoint, BitmapRegionDecoder mBitmapRegionDecoder) {
         int blockLength = mViewPoint.getBlockSizeInOriginalBitmap();//获取宽度
-        int[] widthAndheight = mBitmapDecoderFactory.getImageWidthAndHeight();
+        //int[] widthAndheight = mBitmapDecoderFactory.getImageWidthAndHeight();
         Rect viewpointWindow = mViewPoint.getWindowInOriginalBitmap();
 
-        int maxRow = widthAndheight[0] / blockLength + 1;
-        int maxColumn = widthAndheight[1] / blockLength + 1;
+        /*int maxRow = widthAndheight[0] / blockLength + 1;
+        int maxColumn = widthAndheight[1] / blockLength + 1;*/
         int startRow = viewpointWindow.top / blockLength;
         int startColumn = viewpointWindow.left / blockLength;
         int endRow = viewpointWindow.bottom / blockLength + 1;
@@ -284,7 +282,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     private class MoveGestureListener extends GestureDetector.SimpleOnGestureListener {
 
-        public static final int DEFAULT_ANIMATION_TIME = 400;
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
@@ -306,27 +303,27 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             //动画放大到最大，再点击，回到最小
             Log.d(Tag, "doubleTab");
             float goalScale;
-            if((mMaxScale -mCurrentScaled)<0.2){
+            if ((mMaxScale - mCurrentScaled) < 0.2) {
                 //返回到最小
                 goalScale = mMinScale / mCurrentScaled;
-            }else {
+            } else {
                 //放大到最大
                 goalScale = mMaxScale / mCurrentScaled;
             }
-            SmoothScale(goalScale, e.getX(),e.getY(),DEFAULT_ANIMATION_TIME);
+            SmoothScale(goalScale, e.getX(), e.getY(), DEFAULT_ANIMATION_TIME);
             return true;
         }
     }
 
     private void SmoothScale(float goalScale, final float focusX, final float focusY, int defaultAnimationTime) {
-        final ValueAnimator valueAnimator = ValueAnimator.ofFloat(mCurrentScaled,goalScale);
+        final ValueAnimator valueAnimator = ValueAnimator.ofFloat(mCurrentScaled, goalScale);
         valueAnimator.setDuration(defaultAnimationTime);
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float goalScale = (float) animation.getAnimatedValue();
-                float postScale = goalScale/mCurrentScaled;
-                onScale(postScale,focusX,focusY);
+                float postScale = goalScale / mCurrentScaled;
+                onScale(postScale, focusX, focusY);
 
             }
         });
@@ -405,8 +402,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     }
 
 
-    private int mThumbnailInSampleSize;
-
     AsyncTask<String, String, String> loadThumbnailTask = new AsyncTask<String, String, String>() {
         @Override
         protected String doInBackground(String... params) {
@@ -417,7 +412,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 while (maxInSampleSize > Math.pow(2, i)) {
                     i++;
                 }
-                mThumbnailInSampleSize = (int) Math.pow(2, i);
+                int mThumbnailInSampleSize = (int) Math.pow(2, i);
                 BitmapFactory.Options option = new BitmapFactory.Options();
                 option.inSampleSize = mThumbnailInSampleSize;
                 Rect rect = new Rect(0, 0, widthAndHeight[0], widthAndHeight[1]);
@@ -427,19 +422,16 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 initDisplayMatrixSetMinScale(thumbnailBitmap, mViewPoint, mThumbnailInSampleSize);//此时已经设置好最小缩放倍数
                 mViewPoint.setThumbnail(thumbnailBitmap);//设置缩略图
                 //设置初始位置
-                initViewPointWindow(widthAndHeight);
+                initViewPointWindow();
                 postInvalidate();
             }
             return null;
         }
 
-        private void initViewPointWindow(int[] widthAndHeight) {
+        private void initViewPointWindow() {
             //初始化放大倍数
             mViewPoint.postScaleWindow(1f / mMinScale);
-            /*Rect viewpointWindow = mViewPoint.getWindowInOriginalBitmap();
-            int dx = (viewpointWindow.width() - widthAndHeight[0]) / 2;
-            int dy = (viewpointWindow.height() - widthAndHeight[1]) / 2;
-            mViewPoint.moveWindow(dx, -dy);*/
+
         }
 
         private void initDisplayMatrixSetMinScale(Bitmap thumbnailBitmap, Viewpoint mViewPoint, int mThumbnailInSampleSize) {

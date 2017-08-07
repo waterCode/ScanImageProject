@@ -23,7 +23,6 @@ public class Viewpoint {
     private float mScaleLevel = 1;//放大倍数，详细的放大倍数
     private List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
     private int mBlockSize;
-    private Bitmap mThumbnail;//可以删除
     private BlockBitmap mThumbnailBlock;
     private final Rect originalBitmap;//原图大小区域，不会变
     private Matrix mMatrix = new Matrix();
@@ -103,7 +102,6 @@ public class Viewpoint {
 
     public void setThumbnail(Bitmap mThumbnail) {
         if (mThumbnail != null) {
-            this.mThumbnail = mThumbnail;
             mThumbnailBlock = new BlockBitmap(mThumbnail);
             mThumbnailBlock.setDstRect(0, 0, mRealWidth, mRealHeight);
         }
@@ -114,11 +112,7 @@ public class Viewpoint {
         return mThumbnailBlock;
     }
 
-    public void addBitmapBlock(BlockBitmap blockBitmap) {
-        if (blockBitmap != null) {
-            mBlockBitmapList.add(blockBitmap);
-        }
-    }
+
 
     /**
      * @param distanceX 手指移动的x距离
