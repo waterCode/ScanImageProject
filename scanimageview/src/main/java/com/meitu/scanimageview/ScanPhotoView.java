@@ -1,5 +1,6 @@
 package com.meitu.scanimageview;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -41,6 +42,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private InputStreamBitmapDecoderFactory mBitmapDecoderFactory;
     private float mMinScale;
     private float mCurrentScaled;
+    private float mMaxScale = 3;
 
     LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLru = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 4)) {
         @Override
@@ -282,11 +284,53 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     private class MoveGestureListener extends GestureDetector.SimpleOnGestureListener {
 
+        public static final int DEFAULT_ANIMATION_TIME = 400;
+
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
             moveTo((int) distanceX, (int) distanceY);
             return true;
         }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            int dx = (int) (e2.getX() - e1.getX());
+            int dy = (int) (e2.getY() - e1.getY());
+            Log.d(Tag, "onFling" + ",dx::" + dx + ",dy::" + dy);
+
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            //动画放大到最大，再点击，回到最小
+            Log.d(Tag, "doubleTab");
+            float goalScale;
+            if((mMaxScale -mCurrentScaled)<0.2){
+                //返回到最小
+                goalScale = mMinScale / mCurrentScaled;
+            }else {
+                //放大到最大
+                goalScale = mMaxScale / mCurrentScaled;
+            }
+            SmoothScale(goalScale, e.getX(),e.getY(),DEFAULT_ANIMATION_TIME);
+            return true;
+        }
+    }
+
+    private void SmoothScale(float goalScale, final float focusX, final float focusY, int defaultAnimationTime) {
+        final ValueAnimator valueAnimator = ValueAnimator.ofFloat(mCurrentScaled,goalScale);
+        valueAnimator.setDuration(defaultAnimationTime);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float goalScale = (float) animation.getAnimatedValue();
+                float postScale = goalScale/mCurrentScaled;
+                onScale(postScale,focusX,focusY);
+
+            }
+        });
+        valueAnimator.start();
     }
 
     private class ScaleGestureListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
@@ -304,6 +348,10 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         if ((mCurrentScaled * scaleFactor) < mMinScale) {//防止缩小到过小限制缩小倍数
             scaleFactor = mMinScale / mCurrentScaled;
         }
+
+        if ((mCurrentScaled * scaleFactor) > mMaxScale) {//大于最大倍数
+            scaleFactor = mMaxScale / mCurrentScaled;
+        }
         Log.d(Tag, "ScaleFactor:" + scaleFactor);
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
         Log.d(Tag, "focusX：" + mCurrentScaled);
@@ -313,6 +361,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         float focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;
 
         mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
+        Log.d(Tag, "currentScale:" + mCurrentScaled);
         mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
         if (mViewPoint != null) {
             mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);
@@ -402,13 +451,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             mMinScale = 1f / mThumbnailInSampleSize * scale;
             mCurrentScaled = mMinScale;
             mViewPoint.setScaleLevel(1f / mCurrentScaled);
-            /*float startCenterX = thumbnailBitmap.getWidth() * scale / 2;//拿到中心位置
-            float startCenterY = thumbnailBitmap.getHeight() * scale / 2;
-            float endCenterX = mViewPoint.getRealWidth() / 2f;
-            float endCenterY = mViewPoint.getRealHeight() / 2f;
-            float dx = endCenterX - startCenterX;
-            float dy = endCenterY - startCenterY;
-            mDisplayMatrix.postTranslate(dx, dy);*/
+
         }
 
     };
