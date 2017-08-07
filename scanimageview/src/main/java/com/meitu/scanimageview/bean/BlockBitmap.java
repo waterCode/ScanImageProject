@@ -60,11 +60,13 @@ public class BlockBitmap {
         return mPosition;
     }
 
+
+
     public Rect getPositionInOriginBitmap(int blockSize) {
         int left = blockSize * mPosition.column * mPosition.sampleScale;
         int top = blockSize * mPosition.row * mPosition.sampleScale;
         int right = left + blockSize * mPosition.sampleScale;
-        int bottom = blockSize * mPosition.sampleScale;
+        int bottom = blockSize * mPosition.sampleScale+top;
         //通过position，获取
         mPositionInOriginBitmap.set(left,top,right,bottom);
         return mPositionInOriginBitmap;
@@ -83,6 +85,15 @@ public class BlockBitmap {
             this.row = row;
             this.column = column;
             this.sampleScale = sampleScale;
+        }
+
+        @Override
+        public String toString() {
+            return "Position{" +
+                    "row=" + row +
+                    ", column=" + column +
+                    ", sampleScale=" + sampleScale +
+                    '}';
         }
 
         @Override

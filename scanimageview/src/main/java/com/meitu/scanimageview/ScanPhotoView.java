@@ -124,6 +124,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             List<BlockBitmap> shouldDrawBlockBitmapList = mViewPoint.getBlockBitmapList();
             if (shouldDrawBlockBitmapList != null){
                 for (BlockBitmap block:shouldDrawBlockBitmapList){
+                    Log.d(Tag,"开始绘制图片("+block.getPosition().toString()+")"+"src "+block.getSrc().toString()+" ,dst"+block.getDst().toString());
                     canvas.drawBitmap(block.getBitmap(),block.getSrc(),block.getDst(),null);
                 }
             }
@@ -149,6 +150,9 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
 
     public void updateBitmapBlockSrcAndDstRect(BlockBitmap blockBitmap, Viewpoint viewpoint) {
+        if(blockBitmap.getPosition().getColumn()==0 &&blockBitmap.getPosition().getRow()==1){
+            System.currentTimeMillis();
+        }
         Rect bitmapPosition = blockBitmap.getPositionInOriginBitmap(viewpoint.getBlockSize());
         Rect viewpointPosition = viewpoint.getWindowInOriginalBitmap();
         //求出src和dst
@@ -171,9 +175,9 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         int top = (bitmapPosition.top > viewpointPosition.top) ? bitmapPosition.top : viewpointPosition.top;
         int bottom = (bitmapPosition.bottom < viewpointPosition.bottom) ? bitmapPosition.bottom : viewpointPosition.bottom;
 
-
-        blockBitmap.setSrcRect(left - bitmapPosition.left, top - bitmapPosition.top, right - bitmapPosition.left, bottom - bitmapPosition.top);
-        blockBitmap.setDstRect(left - viewpointPosition.left, top - viewpointPosition.top, right - viewpointPosition.left, bottom - viewpointPosition.top);
+        int sampleScale = blockBitmap.getPosition().getSampleScale();
+        blockBitmap.setSrcRect((left - bitmapPosition.left)/sampleScale, (top - bitmapPosition.top)/sampleScale, (right - bitmapPosition.left)/sampleScale, (bottom - bitmapPosition.top)/sampleScale);
+        blockBitmap.setDstRect((left - viewpointPosition.left)/sampleScale, (top - viewpointPosition.top)/sampleScale, (right - viewpointPosition.left)/sampleScale, (bottom - viewpointPosition.top)/sampleScale);
     }
 
     /**
