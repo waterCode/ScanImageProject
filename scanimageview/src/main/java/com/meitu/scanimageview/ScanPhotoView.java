@@ -257,10 +257,10 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
         int maxRow = widthAndheight[0] / blockLength + 1;
         int maxColumn = widthAndheight[1] / blockLength + 1;
-        int startRow = viewpointWindow.left / blockLength;
-        int startColumn = viewpointWindow.top / blockLength;
-        int endRow = viewpointWindow.right / blockLength + 1;
-        int endColumn = viewpointWindow.bottom / blockLength + 1;
+        int startRow = viewpointWindow.top / blockLength;
+        int startColumn = viewpointWindow.left / blockLength;
+        int endRow = viewpointWindow.bottom / blockLength + 1;
+        int endColumn = viewpointWindow.right / blockLength + 1;
         Point[] point = new Point[2];
         Point pointStart = new Point();
         pointStart.y = startRow;
