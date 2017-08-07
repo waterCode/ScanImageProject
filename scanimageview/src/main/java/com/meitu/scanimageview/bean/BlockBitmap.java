@@ -1,6 +1,7 @@
 package com.meitu.scanimageview.bean;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 
 /**
@@ -19,6 +20,7 @@ public class BlockBitmap {
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
     }
+
 
     public BlockBitmap(Bitmap bmp) {
         if (bmp != null) {

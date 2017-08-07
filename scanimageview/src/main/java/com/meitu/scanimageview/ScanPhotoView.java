@@ -32,7 +32,7 @@ import java.util.List;
  * Created by zmc on 2017/8/3.
  */
 
-public class ScanPhotoView extends ImageView {
+public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView {
 
     private String Tag = ScanPhotoView.class.getSimpleName();
     private GestureDetector mGestureDetector;
@@ -42,6 +42,8 @@ public class ScanPhotoView extends ImageView {
     private InputStreamBitmapDecoderFactory mBitmapDecoderFactory;
     private float mMinScale;
     private float mCurrentScaled;
+
+    private Rect mThumbnailRect;
     LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLru = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().freeMemory() / 4)) {
         @Override
         protected int sizeOf(BlockBitmap.Position key, BlockBitmap value) {
@@ -270,8 +272,8 @@ public class ScanPhotoView extends ImageView {
             distanceY = widthAndHeight[1] - window.bottom;
         }
         Log.d(Tag, "实际移动distanceX" + distanceX);
-        move[0] = distanceX;
-        move[1] = distanceY;
+        move[0] = distanceX*mCurrentScaled;
+        move[1] = distanceY*mCurrentScaled;
         return move;
     }
 
@@ -293,6 +295,9 @@ public class ScanPhotoView extends ImageView {
                 option.inSampleSize = mThumbnailInSampleSize;
                 Rect rect = new Rect(0, 0, widthAndHeight[0], widthAndHeight[1]);
                 Bitmap thumbnailBitmap = mBitmapRegionDecoder.decodeRegion(rect, option);//缩略图
+
+                mThumbnailRect = new Rect(0,0,thumbnailBitmap.getWidth(),thumbnailBitmap.getHeight()); //设置显示图片初始的区域
+
                 initDisplayMatrixSetMinScale(thumbnailBitmap, mViewPoint, mThumbnailInSampleSize);//此时已经设置好最小缩放倍数
                 mViewPoint.setThumbnail(thumbnailBitmap);//设置缩略图
                 //设置初始位置
