@@ -58,10 +58,10 @@ public class Viewpoint {
     }
 
     private void transFormRectToRectF(Rect rect, RectF rectF) {
-        int left = (int) rectF.left;
-        int right = (int) rectF.right;
-        int top = (int) rectF.top;
-        int bottom = (int) rectF.bottom;
+        int left = Math.round( rectF.left);
+        int right =Math.round(rectF.right);
+        int top = Math.round(rectF.top);
+        int bottom = Math.round(rectF.bottom);
         rect.set(left, top, right, bottom);
     }
 

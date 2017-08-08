@@ -133,8 +133,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 }
             }
             canvas.restore();
-            LruCache<BlockBitmap.Position, BlockBitmap> blockBitmapLruCache = mLoadBitmapTaskManager.getBlockBitmapLruCache();
-            Log.d(TAG,"最大size"+blockBitmapLruCache.maxSize()+"当前缓存存了"+blockBitmapLruCache.size());
+
         }
 
     }
@@ -185,7 +184,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
      * 拿到缓存区所有块
      * @param mViewPoint 视图窗口
      * @param isStartTask 不存在的是否开启任务
-     * @return
+     *
      */
     private void getAllDetailBitmapBlock(Viewpoint mViewPoint,boolean isStartTask) {
         Point[] startAndEnd = getStartAndEndPosition(mViewPoint, mBitmapRegionDecoder);//开始和结束的列
@@ -286,14 +285,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             return true;
         }
 
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            int dx = (int) (e2.getX() - e1.getX());
-            int dy = (int) (e2.getY() - e1.getY());
-            Log.d(TAG, "onFling" + ",dx::" + dx + ",dy::" + dy);
 
-            return true;
-        }
 
         @Override
         public boolean onDoubleTap(MotionEvent e) {
@@ -348,29 +340,29 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             scaleFactor = mMaxScale / mCurrentScaled;
         }
 
-
         Log.d(TAG, "ScaleFactor:" + scaleFactor);
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
         Log.d(TAG, "focusX：" + sx);
         Log.d(TAG, "focusY：" + sy);
-        float focusX, focusY;//在屏幕的放大中心
+        float focusXInOriginBitmap, focusYInOriginBitmap;//在屏幕的放大中心
 
-        focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;//在原图中的放大中心点
-        focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;//在原图中的放大中心点
+        focusXInOriginBitmap = 1f / mCurrentScaled * sx + viewPointWindow.left;//在原图中的放大中心点
+        focusYInOriginBitmap = 1f / mCurrentScaled * sy + viewPointWindow.top;//在原图中的放大中心点
 
-        Log.d(TAG, "focusXInOriginalBitmap：" + focusX);
-        Log.d(TAG, "focusYInOriginalBitmap：" + focusY);
-
-        mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
+        Log.d(TAG, "focusXInOriginalBitmap：" + focusXInOriginBitmap);
+        Log.d(TAG, "focusYInOriginalBitmap：" + focusYInOriginBitmap);
         Log.d(TAG, "currentScale:" + mCurrentScaled);
-        mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
         if (mViewPoint != null) {
             mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);//实际移动图片
-            float[] moveDxAndDy = checkPosition();
-            mDisplayMatrix.postTranslate(moveDxAndDy[0],moveDxAndDy[1]);
-            mViewPoint.moveWindow((int) (moveDxAndDy[0] * 1f / mCurrentScaled), (int) (moveDxAndDy[1] * 1f / mCurrentScaled));
-            mViewPoint.postScaleWindow(1f / scaleFactor, focusX, focusY);
+            mViewPoint.postScaleWindow(1f / scaleFactor, focusXInOriginBitmap, focusYInOriginBitmap);
+            mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
+            mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
+            /*float[] moveDxAndDy = checkPosition();
+            Log.d(TAG,"缩放后移动距离为dx: "+moveDxAndDy[0]+"需移动dy是："+ moveDxAndDy[1]);
+            mDisplayMatrix.postTranslate(-moveDxAndDy[0],-moveDxAndDy[1]);
+            mViewPoint.moveWindow((int) (moveDxAndDy[0] * 1f / mCurrentScaled), (int) (moveDxAndDy[1] * 1f / mCurrentScaled));*/
             invalidate();
+
         }
     }
 
