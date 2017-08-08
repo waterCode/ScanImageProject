@@ -203,6 +203,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBitmapRegionDecoder);
         }
 
+
         int startRow = startAndEnd[0].y;
         int startColumn = startAndEnd[0].x;
         int endRow = startAndEnd[1].y;
