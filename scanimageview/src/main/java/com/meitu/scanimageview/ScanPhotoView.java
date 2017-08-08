@@ -138,10 +138,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             }
             canvas.restore();
 
-            /*Drawable drawable = getResources().getDrawable(R.drawable.ic_launcher);
-            drawable.setBounds(-30,-30,42,42);
-            drawable.draw(canvas);*/
-
         }
 
     }
@@ -354,10 +350,10 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
         Log.d(TAG, "focusX：" + mCurrentScaled);
         Log.d(TAG, "focusY：" + mCurrentScaled);
-        float focusX, focusY;
+        float focusX, focusY;//在屏幕的放大中心
 
-        focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;
-        focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;
+        focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;//在原图中的放大中心点
+        focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;//在原图中的放大中心点
 
 
         mCurrentScaled *= scaleFactor;//实时更新当前放大倍数

@@ -136,12 +136,17 @@ public class Viewpoint {
      *
      * @param row        所在行数
      * @param column     所在列数
-     * @param scaleLevel 放大几倍
+     * @param sampleScale 放大几倍
      * @return true 可见
      */
-    public boolean checkIsVisiable(int row, int column, int scaleLevel) {
-        Rect region = getRect(row, column, scaleLevel);
-        return region.intersect(mWindowInOriginalBitmap);
+    public boolean checkIsVisiable(int row, int column, int sampleScale) {
+        // TODO: 2017/8/8 不知道为什么会加载sample为1的块，这里可见剔除非当前level
+        if (sampleScale==getSampleScale()) {
+            Rect region = getRect(row, column, sampleScale);
+            return region.intersect(mWindowInOriginalBitmap);
+        }else {
+            return false;
+        }
     }
 
     public Rect getRect(int row, int column, int sampleScale) {

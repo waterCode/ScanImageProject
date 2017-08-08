@@ -108,6 +108,7 @@ public class LoadBlockBitmapTaskManager {
 
                 mViewpoint.checkBitmapRegion(bitmapRegionRect);//检查越界问题,如果越界取图片会造成崩溃
 
+                // TODO: 2017/8/8 理论上来说这里会产生大量的垃圾，复用
                 Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);
                 //放入Lru缓存
 
@@ -115,6 +116,7 @@ public class LoadBlockBitmapTaskManager {
                 blockBitmap.setPosition(row, column, sampleScale);
                 mBlockBitmapLruCache.put(blockBitmap.getPosition(), blockBitmap);
                 if (mLoadBlockBitmapCallback != null) {
+                    Log.d(TAG,blockBitmap.getPosition().toString()+"加载成功，开启回调");
                     mLoadBlockBitmapCallback.onLoadFinished();
                 }
 
