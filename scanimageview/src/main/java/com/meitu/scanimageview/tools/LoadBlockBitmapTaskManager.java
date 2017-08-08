@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Rect;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.util.LruCache;
 
@@ -13,6 +14,9 @@ import com.meitu.scanimageview.util.LoadBlockBitmapCallback;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by zmc on 2017/8/6.
@@ -25,16 +29,40 @@ public class LoadBlockBitmapTaskManager {
     private Executor mTaskPool;
     private BitmapRegionDecoder mDecoder;
 
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final int CORE_POOL_SIZE = Math.max(2, Math.min(CPU_COUNT - 1, 4));
+    private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;
+    private static final int KEEP_ALIVE_SECONDS = 30;
     public LoadBlockBitmapTaskManager(Viewpoint mViewPoint, LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLruCache, BitmapRegionDecoder decoder) {
         this.mViewPoint = mViewPoint;
         this.mBlockBitmapLruCache = mBlockBitmapLruCache;
-        mTaskPool = Executors.newFixedThreadPool(5);
+        mTaskPool = new ThreadPoolExecutor(CORE_POOL_SIZE,MAXIMUM_POOL_SIZE,KEEP_ALIVE_SECONDS, TimeUnit.SECONDS,new LIFOBlockDeque<Runnable>());
         mDecoder = decoder;
     }
 
     public void summitTask(LoadBitmapTask task) {
         task.initData(mViewPoint, mDecoder, mBlockBitmapLruCache);
         mTaskPool.execute(task);
+    }
+
+    private class LIFOBlockDeque<T> extends LinkedBlockingDeque<T> {
+
+        @Override
+        public boolean offer(T t) {
+            return super.offerFirst(t);
+        }
+
+
+        @Override
+        public boolean add(T t) {
+            return super.offerFirst(t);
+        }
+
+
+        @Override
+        public void put(T t) throws InterruptedException {
+            super.putFirst(t);
+        }
     }
 
 

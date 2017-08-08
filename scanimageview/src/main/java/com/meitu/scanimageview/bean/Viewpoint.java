@@ -37,7 +37,8 @@ public class Viewpoint {
         this.mRealWidth = mRealWidth;
         mStartWindow = new RectF(0, 0, (mRealWidth), (mRealHeight));
         originalBitmap = new Rect(0, 0, imageWidthAndHeight[0], imageWidthAndHeight[1]);//原图的大小
-        mBlockSize = mRealWidth / 2 + ((mRealWidth % 2) == 0 ? 1 : 0);
+        //mBlockSize = mRealWidth / 4 + ((mRealWidth % 4) == 0 ? 2 : 0);
+        mBlockSize = (mRealHeight + mRealWidth) / 4 + (((mRealHeight + mRealWidth) % 4) == 0 ? 2 : 1);//分块机制
 
     }
 
@@ -111,7 +112,6 @@ public class Viewpoint {
     public BlockBitmap getmThumbnailBlock() {
         return mThumbnailBlock;
     }
-
 
 
     /**

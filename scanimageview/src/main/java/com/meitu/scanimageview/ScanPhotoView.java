@@ -120,6 +120,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                     + "width:" + window.width() + "height" + window.height());
             if (mViewPoint.getmThumbnailBlock() != null) {
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
+
             }
             getAllDetailBitmapBlock(mViewPoint);//拿到所有缓存中有的块
             //为所有的块设置位置
@@ -353,15 +354,18 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
         Log.d(TAG, "focusX：" + mCurrentScaled);
         Log.d(TAG, "focusY：" + mCurrentScaled);
+        float focusX, focusY;
 
-        float focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;
-        float focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;
+        focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;
+        focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;
+
 
         mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
         Log.d(TAG, "currentScale:" + mCurrentScaled);
         mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
         if (mViewPoint != null) {
             mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);
+
             mViewPoint.postScaleWindow(1f / scaleFactor, focusX, focusY);
             invalidate();
         }
@@ -369,7 +373,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     private void moveTo(int distanceX, int distanceY) {
         if (mViewPoint != null) {
-            // TODO: 2017/8/7 bug估计是精度转换出现的问题
             float[] realMove = getRealMove(distanceX, distanceY);//越界检查
             mDisplayMatrix.postTranslate(-realMove[0], -realMove[1]);
             mViewPoint.moveWindow((int) (realMove[0] * 1f / mCurrentScaled), (int) (realMove[1] * 1f / mCurrentScaled));

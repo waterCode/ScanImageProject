@@ -7,28 +7,28 @@ import java.io.File;
 import java.io.IOException;
 
 public class FileBitmapDecoderFactory implements BitmapDecoderFactory {
-    private String path;
+    private String mPath;
 
     public FileBitmapDecoderFactory(String filePath) {
         super();
-        this.path = filePath;
+        this.mPath = filePath;
     }
 
     public FileBitmapDecoderFactory(File file) {
         super();
-        this.path = file.getAbsolutePath();
+        this.mPath = file.getAbsolutePath();
     }
 
     @Override
     public BitmapRegionDecoder made() throws IOException {
-        return BitmapRegionDecoder.newInstance(path, false);
+        return BitmapRegionDecoder.newInstance(mPath, false);
     }
 
     @Override
     public int[] getImageWidthAndHeight() {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(path, options);
+        BitmapFactory.decodeFile(mPath, options);
         return new int[]{options.outWidth, options.outHeight};
     }
 }
