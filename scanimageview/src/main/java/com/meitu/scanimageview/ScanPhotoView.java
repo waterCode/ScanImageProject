@@ -13,7 +13,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.LruCache;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -345,6 +344,12 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         if ((mCurrentScaled * scaleFactor) > mMaxScale) {//大于最大倍数
             scaleFactor = mMaxScale / mCurrentScaled;
         }
+
+        if(scaleFactor<1) {
+            float[] focus = checkFocus(sx, sy);
+            sx = focus[0];
+            sy = focus[1];
+        }
         Log.d(TAG, "ScaleFactor:" + scaleFactor);
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
         Log.d(TAG, "focusX：" + sx);
@@ -361,11 +366,35 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         Log.d(TAG, "currentScale:" + mCurrentScaled);
         mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
         if (mViewPoint != null) {
-            mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);
+            mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);//实际移动图片
 
             mViewPoint.postScaleWindow(1f / scaleFactor, focusX, focusY);
             invalidate();
+            moveTo(0,0);
         }
+    }
+
+    private float[] checkFocus(float sx, float sy) {
+        sx *= 1f/mCurrentScaled;
+        sy *= 1f/mCurrentScaled;
+        float[] focus = new float[2];
+        Rect window = mViewPoint.getWindowInOriginalBitmap();
+        int[] widthAndHeight = mBitmapDecoderFactory.getImageWidthAndHeight();
+        if (window.left <= 1) {
+            sx = 0;
+        }
+        if (window.top <= 1) {
+            sy = 0;
+        }
+        if (window.right >= widthAndHeight[0]) {
+            sx = window.right;
+        }
+        if (window.bottom >= widthAndHeight[1]) {
+            sy = window.bottom;
+        }
+        focus[0] = sx * mCurrentScaled;
+        focus[1] = sy * mCurrentScaled;
+        return focus;
     }
 
     private void moveTo(int distanceX, int distanceY) {

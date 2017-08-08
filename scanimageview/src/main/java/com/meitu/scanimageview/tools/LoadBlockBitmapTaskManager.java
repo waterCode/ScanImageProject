@@ -141,11 +141,9 @@ public class LoadBlockBitmapTaskManager {
                 options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
                 options.inMutable = true;
 
-                // TODO: 2017/8/8 理论上来说这里会产生大量的垃圾，复用
                 Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);
                 //放入Lru缓存
 
-                // TODO: 2017/8/8 用对象池
 
                 BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
                 if (reuseBlockBitmap != null) {
