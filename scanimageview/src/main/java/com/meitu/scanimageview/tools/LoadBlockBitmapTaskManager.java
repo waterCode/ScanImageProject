@@ -134,19 +134,25 @@ public class LoadBlockBitmapTaskManager {
             if (mViewpoint.checkIsVisiable(row, column, sampleScale)) {
                 //加载图片
                 Rect bitmapRegionRect = mViewpoint.getRect(row, column, sampleScale);
-                if(isRectRegionIllegal(bitmapRegionRect)){//不合法直接结束该线程执行
-                    return;
-                }
                 Log.d(TAG, "开始加载图片块" + "所在行为" + row + ",列：" + column + "sampleScale:" + sampleScale
                         + ",加载区域为：" + bitmapRegionRect.toString());
                 Log.d(TAG, "当前样例图片放大水平" + mViewpoint.getScaleLevel());
                 mViewpoint.checkBitmapRegion(bitmapRegionRect);//检查越界问题,如果越界取图片会造成崩溃
+                if(isRectRegionIllegal(bitmapRegionRect)){//不合法直接结束该线程执行
+                    return;
+                }
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = sampleScale;
                 options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
                 options.inMutable = true;
-                Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
+                Bitmap bmp =null;
+                try {
+
+                bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
+                }catch (IllegalArgumentException e){
+                    Log.e("what?",bitmapRegionRect.toString());
+                }
 
                 //放入Lru缓存
                 BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
