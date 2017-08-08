@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.LruCache;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -105,6 +106,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     @Override
     protected void onDraw(Canvas canvas) {
+
         if (mViewPoint != null) {
             //设置viewpoint的放大倍数
             //mViewPoint.setScaleLevel(mCurrentScale);
@@ -116,7 +118,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
 
             }
-            getAllDetailBitmapBlock(mViewPoint);//拿到所有缓存中有的块
+            getAllDetailBitmapBlock(mViewPoint,true);//拿到所有缓存中有的块
             //为所有的块设置位置
             updateAllBitmapBlock();
             //遍历绘制上去
@@ -131,7 +133,8 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 }
             }
             canvas.restore();
-
+            LruCache<BlockBitmap.Position, BlockBitmap> blockBitmapLruCache = mLoadBitmapTaskManager.getBlockBitmapLruCache();
+            Log.d(TAG,"最大size"+blockBitmapLruCache.maxSize()+"当前缓存存了"+blockBitmapLruCache.size());
         }
 
     }
@@ -179,18 +182,18 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     }
 
     /**
-     * 获取所有的清晰模块
-     *
-     * @param mViewPoint 窗口类
+     * 拿到缓存区所有块
+     * @param mViewPoint 视图窗口
+     * @param isStartTask 不存在的是否开启任务
+     * @return
      */
-    private List<BlockBitmap> getAllDetailBitmapBlock(Viewpoint mViewPoint) {
+    private void getAllDetailBitmapBlock(Viewpoint mViewPoint,boolean isStartTask) {
         Point[] startAndEnd = getStartAndEndPosition(mViewPoint, mBitmapRegionDecoder);//开始和结束的列
-        getAllAvailableBlock(startAndEnd, mViewPoint.getSampleScale());
-        return null;
+        getAllAvailableBlock(startAndEnd, mViewPoint.getSampleScale(),isStartTask);
     }
 
 
-    private void getAllAvailableBlock(Point[] startAndEnd, int sampleScale) {
+    private void getAllAvailableBlock(Point[] startAndEnd, int sampleScale,boolean isStartTask) {
         // TODO: 2017/8/8 这个应该在什么地方new？
         if (mLoadBitmapTaskManager == null) {
             mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBitmapRegionDecoder);
@@ -211,7 +214,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             for (j = startColumn; j < endColumn; j++) {
                 //遍历每个位置，从缓存里面取，有就直接添加，没有就去开始一个任务去加载
                 BlockBitmap blockBitmap = getBlockBitmapFromLru(i, j, sampleScale);
-                if (blockBitmap == null) {//没有就开启一个任务去加载，异步的
+                if (blockBitmap == null && isStartTask) {//没有就开启一个任务去加载，异步的
                     startTask(i, j, sampleScale);
                 } else {
                     //有的话添加入图片块集合
