@@ -43,8 +43,8 @@ public class LoadBlockBitmapTaskManager {
         protected void entryRemoved(boolean evicted, BlockBitmap.Position key, BlockBitmap oldValue, BlockBitmap newValue) {
             // TODO: 2017/8/8 这个原理。
             if(evicted) {
-                mBitmapSimplePool.release(oldValue.getBitmap());
-                mBlockBitmapSimplePool.release(oldValue);
+                /*mBitmapSimplePool.release(oldValue.getBitmap());
+                mBlockBitmapSimplePool.release(oldValue);*/
             }
         }
     };

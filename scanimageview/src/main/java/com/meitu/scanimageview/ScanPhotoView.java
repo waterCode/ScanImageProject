@@ -118,7 +118,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
 
             }
-            getAllDetailBitmapBlock(mViewPoint,true);//拿到所有缓存中有的块
+            getAllDetailBitmapBlock(mViewPoint,false);//拿到所有缓存中有的块
             //为所有的块设置位置
             updateAllBitmapBlock();
             //遍历绘制上去
@@ -143,7 +143,12 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         if (blockBitmapList != null) {
             //获取
             for (BlockBitmap blockBitmap : blockBitmapList) {
+                try {
+
                 updateBitmapBlockSrcAndDstRect(blockBitmap, mViewPoint);//更新所有模块的区域
+                }catch (NullPointerException e){
+                    Log.d("haha","空指针集合大小"+blockBitmapList.size());
+                }
             }
         }
     }
@@ -205,22 +210,31 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
         int i = startRow;
         int j;
-
-        List<BlockBitmap> blockBitmapList = mViewPoint.getBlockBitmapList();
-        blockBitmapList.clear();//使用前先清空
-
+        List<BlockBitmap> blockBitmapList=null;
+        if(!isStartTask) {
+            blockBitmapList = mViewPoint.getBlockBitmapList();
+            blockBitmapList.clear();//使用前先清空
+        }
         for (; i < endRow; i++) {
             for (j = startColumn; j < endColumn; j++) {
                 //遍历每个位置，从缓存里面取，有就直接添加，没有就去开始一个任务去加载
                 BlockBitmap blockBitmap = getBlockBitmapFromLru(i, j, sampleScale);
-                if (blockBitmap == null && isStartTask) {//没有就开启一个任务去加载，异步的
-                    startTask(i, j, sampleScale);
+                if (blockBitmap == null ) {//没有就开启一个任务去加载，异步的
+                    if(isStartTask) {
+                        startTask(i, j, sampleScale);
+                    }
                 } else {
                     //有的话添加入图片块集合
-                    blockBitmapList.add(blockBitmap);//设置模块
+                    if(!isStartTask) {
+                        blockBitmapList.add(blockBitmap);//设置模块
+                    }
                 }
             }
         }
+    }
+
+    public void findNeedLoadBitmapBlockAndSumitTask(){
+        getAllDetailBitmapBlock(mViewPoint,true);
     }
 
     private void startTask(int row, int column, int sampleScale) {
@@ -361,6 +375,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             Log.d(TAG,"缩放后移动距离为dx: "+moveDxAndDy[0]+"需移动dy是："+ moveDxAndDy[1]);
             mDisplayMatrix.postTranslate(-moveDxAndDy[0],-moveDxAndDy[1]);
             mViewPoint.moveWindow((int) (moveDxAndDy[0] * 1f / mCurrentScaled), (int) (moveDxAndDy[1] * 1f / mCurrentScaled));*/
+            findNeedLoadBitmapBlockAndSumitTask();
             invalidate();
 
         }
@@ -393,6 +408,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             float[] realMove = getRealMove(distanceX, distanceY);//越界检查
             mDisplayMatrix.postTranslate(-realMove[0], -realMove[1]);
             mViewPoint.moveWindow((int) (realMove[0] * 1f / mCurrentScaled), (int) (realMove[1] * 1f / mCurrentScaled));
+            findNeedLoadBitmapBlockAndSumitTask();
             invalidate();
         }
     }
@@ -454,9 +470,15 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 mViewPoint.setThumbnail(thumbnailBitmap);//设置缩略图
                 //设置初始位置
                 initViewPointWindow();
-                postInvalidate();
+
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            findNeedLoadBitmapBlockAndSumitTask();
+            invalidate();
         }
 
         private void initViewPointWindow() {
