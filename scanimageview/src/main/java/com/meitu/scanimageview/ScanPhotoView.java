@@ -345,11 +345,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             scaleFactor = mMaxScale / mCurrentScaled;
         }
 
-        if(scaleFactor<1) {
-            float[] focus = checkFocus(sx, sy);
-            sx = focus[0];
-            sy = focus[1];
-        }
+
         Log.d(TAG, "ScaleFactor:" + scaleFactor);
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
         Log.d(TAG, "focusX：" + sx);
@@ -367,34 +363,34 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
         if (mViewPoint != null) {
             mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);//实际移动图片
-
+            float[] moveDxAndDy = checkPosition();
+            mDisplayMatrix.postTranslate(moveDxAndDy[0],moveDxAndDy[1]);
+            mViewPoint.moveWindow((int) (moveDxAndDy[0] * 1f / mCurrentScaled), (int) (moveDxAndDy[1] * 1f / mCurrentScaled));
             mViewPoint.postScaleWindow(1f / scaleFactor, focusX, focusY);
             invalidate();
-            moveTo(0,0);
         }
     }
 
-    private float[] checkFocus(float sx, float sy) {
-        sx *= 1f/mCurrentScaled;
-        sy *= 1f/mCurrentScaled;
-        float[] focus = new float[2];
+
+    private float[] checkPosition() {
         Rect window = mViewPoint.getWindowInOriginalBitmap();
+        float[] dxAndDy = new float[2];
         int[] widthAndHeight = mBitmapDecoderFactory.getImageWidthAndHeight();
-        if (window.left <= 1) {
-            sx = 0;
+        if (window.left < 0) {
+            dxAndDy[0] = 0 - window.left;
         }
-        if (window.top <= 1) {
-            sy = 0;
+        if (window.top < 0) {
+            dxAndDy[1] = 0 - window.top;
         }
-        if (window.right >= widthAndHeight[0]) {
-            sx = window.right;
+        if(window.right >widthAndHeight[0]){
+            dxAndDy[0] = widthAndHeight[0] -window.right;
         }
-        if (window.bottom >= widthAndHeight[1]) {
-            sy = window.bottom;
+        if(window.bottom > widthAndHeight[1]){
+            dxAndDy[1] = widthAndHeight[1] - window.bottom;
         }
-        focus[0] = sx * mCurrentScaled;
-        focus[1] = sy * mCurrentScaled;
-        return focus;
+        dxAndDy[0] *= mCurrentScaled;
+        dxAndDy[1] *= mCurrentScaled;
+        return dxAndDy;
     }
 
     private void moveTo(int distanceX, int distanceY) {
@@ -406,6 +402,13 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
     }
 
+
+    /**
+     * 获取真正需要移动距离
+     * @param distanceX x轴距离
+     * @param distanceY y轴距离
+     * @return 一个素组move【0】表示宽，move【1】表示高
+     */
     private float[] getRealMove(float distanceX, float distanceY) {
         float[] move = new float[2];
         Rect window = mViewPoint.getWindowInOriginalBitmap();
@@ -413,20 +416,24 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         Log.d(TAG, "当前left" + window.left);
         Log.d(TAG, "可能移动distanceX" + distanceX);
         if ((window.left + distanceX) < 0) {
-            distanceX = 0 - window.left;
+            float bigDistanceX = 0 - window.left;
+            distanceX = bigDistanceX *mCurrentScaled;
         }
         if ((window.right + distanceX) > widthAndHeight[0]) {
-            distanceX = widthAndHeight[0] - window.right;
+            float bigDistanceX = widthAndHeight[0] - window.right;
+            distanceX = bigDistanceX *mCurrentScaled;
         }
         if ((window.top + distanceY) < 0) {
-            distanceY = 0 - window.top;
+            float bigDistanceY = 0 - window.top;
+            distanceY = bigDistanceY*mCurrentScaled;
         }
         if ((window.bottom + distanceY > widthAndHeight[1])) {
-            distanceY = widthAndHeight[1] - window.bottom;
+            float bigDistanceY = widthAndHeight[1] - window.bottom;
+            distanceY = bigDistanceY*mCurrentScaled;
         }
         Log.d(TAG, "实际移动distanceX" + distanceX);
-        move[0] = distanceX * mCurrentScaled;
-        move[1] = distanceY * mCurrentScaled;
+        move[0] = distanceX ;
+        move[1] = distanceY ;
         return move;
     }
 

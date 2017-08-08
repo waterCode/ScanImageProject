@@ -42,12 +42,13 @@ public class LoadBlockBitmapTaskManager {
         @Override
         protected void entryRemoved(boolean evicted, BlockBitmap.Position key, BlockBitmap oldValue, BlockBitmap newValue) {
             // TODO: 2017/8/8 这个原理。
-            if(!evicted) {
+           /* if(!evicted) {
                 mBitmapSimplePool.release(oldValue.getBitmap());
                 mBlockBitmapSimplePool.release(oldValue);
-            }
+            }*/
         }
     };
+
     public LoadBlockBitmapTaskManager(Viewpoint mViewPoint, BitmapRegionDecoder decoder) {
         this.mViewPoint = mViewPoint;
         mTaskPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS, new LIFOBlockDeque<Runnable>());
@@ -73,6 +74,7 @@ public class LoadBlockBitmapTaskManager {
 
     /**
      * 后进先出的线程池队列
+     *
      * @param <T> 队列参数类型
      */
     private class LIFOBlockDeque<T> extends LinkedBlockingDeque<T> {
@@ -132,6 +134,9 @@ public class LoadBlockBitmapTaskManager {
             if (mViewpoint.checkIsVisiable(row, column, sampleScale)) {
                 //加载图片
                 Rect bitmapRegionRect = mViewpoint.getRect(row, column, sampleScale);
+                if(isRectRegionIllegal(bitmapRegionRect)){//不合法直接结束该线程执行
+                    return;
+                }
                 Log.d(TAG, "开始加载图片块" + "所在行为" + row + ",列：" + column + "sampleScale:" + sampleScale
                         + ",加载区域为：" + bitmapRegionRect.toString());
                 Log.d(TAG, "当前样例图片放大水平" + mViewpoint.getScaleLevel());
@@ -141,11 +146,9 @@ public class LoadBlockBitmapTaskManager {
                 options.inSampleSize = sampleScale;
                 options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
                 options.inMutable = true;
+                Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
 
-                Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);
                 //放入Lru缓存
-
-
                 BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
                 if (reuseBlockBitmap != null) {
                     reuseBlockBitmap.setBitmap(bmp);
@@ -159,6 +162,14 @@ public class LoadBlockBitmapTaskManager {
                     mLoadBlockBitmapCallback.onLoadFinished();
                 }
 
+            }
+        }
+
+        public boolean isRectRegionIllegal(Rect rect){
+            if(rect.right<=rect.left||rect.bottom<=rect.top){
+                return true;
+            }else {
+                return false;
             }
         }
 
