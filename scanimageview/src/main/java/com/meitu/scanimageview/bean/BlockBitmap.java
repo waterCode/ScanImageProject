@@ -30,6 +30,10 @@ public class BlockBitmap {
         }
     }
 
+    public void setBitmap(Bitmap mBitmap) {
+        this.mBitmap = mBitmap;
+    }
+
     public Bitmap getBitmap() {
         return mBitmap;
     }

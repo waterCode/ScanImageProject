@@ -44,12 +44,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private float mMaxScale = 3;
     public static final int DEFAULT_ANIMATION_TIME = 400;
 
-    LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLru = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 4)) {
-        @Override
-        protected int sizeOf(BlockBitmap.Position key, BlockBitmap value) {
-            return value.getBitmap().getByteCount();
-        }
-    };
+
     private LoadBlockBitmapTaskManager mLoadBitmapTaskManager;
     private final Matrix mDisplayMatrix = new Matrix();
 
@@ -193,39 +188,42 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         Point[] startAndEnd = getStartAndEndPosition(mViewPoint, mBitmapRegionDecoder);//开始和结束的列
         getAllAvailableBlock(startAndEnd, mViewPoint.getSampleScale());
         return null;
-
     }
 
 
     private void getAllAvailableBlock(Point[] startAndEnd, int sampleScale) {
+        // TODO: 2017/8/8 这个应该在什么地方new？
+        if (mLoadBitmapTaskManager == null) {
+            mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBitmapRegionDecoder);
+        }
+
         int startRow = startAndEnd[0].y;
         int startColumn = startAndEnd[0].x;
         int endRow = startAndEnd[1].y;
         int endColumn = startAndEnd[1].x;
 
-
         int i = startRow;
         int j;
-        mViewPoint.getBlockBitmapList().clear();//使用前先清空
+
+        List<BlockBitmap> blockBitmapList = mViewPoint.getBlockBitmapList();
+        blockBitmapList.clear();//使用前先清空
+
         for (; i < endRow; i++) {
             for (j = startColumn; j < endColumn; j++) {
                 //遍历每个位置，从缓存里面取，有就直接添加，没有就去开始一个任务去加载
                 BlockBitmap blockBitmap = getBlockBitmapFromLru(i, j, sampleScale);
                 if (blockBitmap == null) {//没有就开启一个任务去加载，异步的
-                    // TODO: 2017/8/5 开始
                     startTask(i, j, sampleScale);
                 } else {
                     //有的话添加入图片块集合
-                    mViewPoint.getBlockBitmapList().add(blockBitmap);//设置模块
+                    blockBitmapList.add(blockBitmap);//设置模块
                 }
             }
         }
     }
 
     private void startTask(int row, int column, int sampleScale) {
-        if (mLoadBitmapTaskManager == null) {
-            mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBlockBitmapLru, mBitmapRegionDecoder);
-        }
+
         LoadBlockBitmapTaskManager.LoadBitmapTask loadBitmapTask;
         loadBitmapTask = new LoadBlockBitmapTaskManager.LoadBitmapTask(row, column, sampleScale);
         loadBitmapTask.setLoadFinshedListener(this);
@@ -236,7 +234,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private BlockBitmap getBlockBitmapFromLru(int row, int column, int sampleScale) {
         BlockBitmap.Position key = new BlockBitmap.Position(row, column, sampleScale);
 
-        BlockBitmap blockBitmap = mBlockBitmapLru.get(key);
+        BlockBitmap blockBitmap = mLoadBitmapTaskManager.getBlockBitmapLruCache().get(key);
         //设置绘制区域
         if (blockBitmap != null) {
             //计算绘制区域并返回
@@ -332,6 +330,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         public boolean onScale(ScaleGestureDetector detector) {
             float scaleFactor = detector.getScaleFactor();//放大因子
             ScanPhotoView.this.onScale(scaleFactor, detector.getFocusX(), detector.getFocusY());
+
             return true;
         }
     }
@@ -348,13 +347,15 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
         Log.d(TAG, "ScaleFactor:" + scaleFactor);
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
-        Log.d(TAG, "focusX：" + mCurrentScaled);
-        Log.d(TAG, "focusY：" + mCurrentScaled);
+        Log.d(TAG, "focusX：" + sx);
+        Log.d(TAG, "focusY：" + sy);
         float focusX, focusY;//在屏幕的放大中心
 
         focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;//在原图中的放大中心点
         focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;//在原图中的放大中心点
 
+        Log.d(TAG, "focusXInOriginalBitmap：" + focusX);
+        Log.d(TAG, "focusYInOriginalBitmap：" + focusY);
 
         mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
         Log.d(TAG, "currentScale:" + mCurrentScaled);
