@@ -25,8 +25,8 @@ public class LoadBlockBitmapTaskManager {
     private Viewpoint mViewPoint;
     private Executor mTaskPool;
     private BitmapRegionDecoder mDecoder;
-    private Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SynchronizedPool<>(50);
-    private Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SynchronizedPool<>(50);
+    private Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SynchronizedPool<>(30);
+    private Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SynchronizedPool<>(30);
     private LIFOBlockDeque<Runnable> mLIFOBlockDeque  = new LIFOBlockDeque<>();
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
@@ -35,7 +35,7 @@ public class LoadBlockBitmapTaskManager {
     private static final int KEEP_ALIVE_SECONDS = 30;
 
 
-    private final LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLruCache = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 4)) {
+    private final LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLruCache = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 6)) {
         @Override
         protected int sizeOf(BlockBitmap.Position key, BlockBitmap value) {
             return value.getBitmap().getByteCount();
