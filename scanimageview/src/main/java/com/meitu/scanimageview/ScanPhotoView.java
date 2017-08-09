@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.widget.Scroller;
 
 import com.meitu.scanimageview.bean.BlockBitmap;
 import com.meitu.scanimageview.bean.Viewpoint;
@@ -43,6 +44,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private float mMaxScale = 3;
     public static final int DEFAULT_ANIMATION_TIME = 400;
 
+    private Scroller mScroller;
 
     private LoadBlockBitmapTaskManager mLoadBitmapTaskManager;
     private final Matrix mDisplayMatrix = new Matrix();
@@ -70,6 +72,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private void init() {
         mGestureDetector = new GestureDetector(getContext(), new MoveGestureListener());
         mScaleGestureDetector = new ScaleGestureDetector(getContext(), new ScaleGestureListener());
+        mScroller = new Scroller(getContext());
     }
 
 
@@ -78,6 +81,18 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         mGestureDetector.onTouchEvent(event);
         mScaleGestureDetector.onTouchEvent(event);
         return true;
+    }
+
+    @Override
+    public void computeScroll() {
+        if (mScroller.computeScrollOffset()) {//移动
+            //直接获取间隔，然后调用moveto
+            /*Log.d(TAG, "XXX" + mScroller.getCurrX() + "YYY" + mScroller.getCurrY());
+            float dx = mScroller.getCurrX() - mViewPoint.getWindowInOriginalBitmap().left * mCurrentScaled;
+            float dy = mScroller.getCurrY() - mViewPoint.getWindowInOriginalBitmap().top * mCurrentScaled;
+            Log.d(TAG, "computeScroll dx" + dx + ",dy:" + dy);
+            moveTo(-dx, -dy);*/
+        }
     }
 
     @Override
@@ -117,7 +132,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
 
             }
-            getAllDetailBitmapBlock(mViewPoint,false);//拿到所有缓存中有的块
+            getAllDetailBitmapBlock(mViewPoint, false);//拿到所有缓存中有的块
             //为所有的块设置位置
             updateAllBitmapBlock();
             //遍历绘制上去
@@ -308,6 +323,23 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 goalScale = mMaxScale / mCurrentScaled;
             }
             SmoothScale(goalScale, e.getX(), e.getY(), DEFAULT_ANIMATION_TIME);
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            Rect viewpointRect = mViewPoint.getWindowInOriginalBitmap();
+            Rect originalBitmapRect = mViewPoint.getOriginalBitmapRect();
+            //获取起始点，结束点，最大最小距离
+            float startX = viewpointRect.left * mCurrentScaled;//实际起始点
+            float startY = viewpointRect.top * mCurrentScaled;//
+            float minX = 0;
+            float minY = 0;
+            float maxX = originalBitmapRect.right * mCurrentScaled;
+            float maxY = originalBitmapRect.bottom * mCurrentScaled;
+            Log.d(TAG, "startX: " + startX + ",minX: " + startY + ",minX: " + minX + ",minY:" + minY + ",MaxX:" + maxX + ",MaxY:" + maxY + ",velocityX:" + velocityX + ",velocityY:" + velocityY);
+            mScroller.forceFinished(true);
+            mScroller.fling((int) startX, (int) startY, (int) velocityX, (int) velocityY, (int) minX, (int) maxX, (int) minY, (int) maxY);
             return true;
         }
     }

@@ -24,7 +24,7 @@ public class Viewpoint {
     private List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
     private int mBlockSize;
     private BlockBitmap mThumbnailBlock;
-    private final Rect originalBitmap;//原图大小区域，不会变
+    private final Rect mOriginalBitmapRect;//原图大小区域，不会变
     private Matrix mMatrix = new Matrix();//用来映射viewpoint所在区域用的矩阵
 
     /**
@@ -36,12 +36,16 @@ public class Viewpoint {
         this.mRealHeight = mRealHeight;
         this.mRealWidth = mRealWidth;
         mStartWindow = new RectF(0, 0, (mRealWidth), (mRealHeight));
-        originalBitmap = new Rect(0, 0, imageWidthAndHeight[0], imageWidthAndHeight[1]);//原图的大小
+        mOriginalBitmapRect = new Rect(0, 0, imageWidthAndHeight[0], imageWidthAndHeight[1]);//原图的大小
         //mBlockSize = mRealWidth / 4 + ((mRealWidth % 4) == 0 ? 2 : 0);
         mBlockSize = (mRealHeight + mRealWidth) / 4 + (((mRealHeight + mRealWidth) % 4) == 0 ? 2 : 1);//分块机制
 
     }
 
+
+    public Rect getOriginalBitmapRect() {
+        return mOriginalBitmapRect;
+    }
 
     public int getBlockSizeInOriginalBitmap() {
         return mBlockSize * getSampleScale();
@@ -164,11 +168,11 @@ public class Viewpoint {
         if (bitmapRegionRect.top < 0) {
             bitmapRegionRect.top = 0;
         }
-        if (bitmapRegionRect.right > originalBitmap.right) {
-            bitmapRegionRect.right = originalBitmap.right;
+        if (bitmapRegionRect.right > mOriginalBitmapRect.right) {
+            bitmapRegionRect.right = mOriginalBitmapRect.right;
         }
-        if (bitmapRegionRect.bottom > originalBitmap.bottom) {
-            bitmapRegionRect.bottom = originalBitmap.bottom;
+        if (bitmapRegionRect.bottom > mOriginalBitmapRect.bottom) {
+            bitmapRegionRect.bottom = mOriginalBitmapRect.bottom;
         }
 
     }
