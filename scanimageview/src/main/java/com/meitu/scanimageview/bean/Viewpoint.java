@@ -25,7 +25,7 @@ public class Viewpoint {
     private int mBlockSize;
     private BlockBitmap mThumbnailBlock;
     private final Rect originalBitmap;//原图大小区域，不会变
-    private Matrix mMatrix = new Matrix();
+    private Matrix mMatrix = new Matrix();//用来映射viewpoint所在区域用的矩阵
 
     /**
      * @param mRealWidth          窗口的实际宽度
@@ -118,7 +118,7 @@ public class Viewpoint {
      * @param distanceX 手指移动的x距离
      * @param distanceY 手指移动的y距离
      */
-    public void moveWindow(int distanceX, int distanceY) {
+    public void moveWindow(float distanceX, float distanceY) {
         mMatrix.postTranslate(distanceX, distanceY);
     }
 
