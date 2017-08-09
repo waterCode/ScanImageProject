@@ -78,7 +78,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        //mScaleGestureDetector.onTouchEvent(event);
+        mScaleGestureDetector.onTouchEvent(event);
         if (!mScaleGestureDetector.isInProgress()) {
             mGestureDetector.onTouchEvent(event);
         }
