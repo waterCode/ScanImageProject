@@ -25,8 +25,8 @@ public class LoadBlockBitmapTaskManager {
     private Viewpoint mViewPoint;
     private Executor mTaskPool;
     private BitmapRegionDecoder mDecoder;
-    private Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SimplePool<>(30);
-    private Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SimplePool<>(30);
+    private Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SynchronizedPool<>(50);
+    private Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SynchronizedPool<>(50);
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = Math.max(2, Math.min(CPU_COUNT - 1, 4));
@@ -43,8 +43,8 @@ public class LoadBlockBitmapTaskManager {
         protected void entryRemoved(boolean evicted, BlockBitmap.Position key, BlockBitmap oldValue, BlockBitmap newValue) {
             // TODO: 2017/8/8 这个原理。
             if(evicted) {
-                /*mBitmapSimplePool.release(oldValue.getBitmap());
-                mBlockBitmapSimplePool.release(oldValue);*/
+                mBitmapSimplePool.release(oldValue.getBitmap());
+                mBlockBitmapSimplePool.release(oldValue);
             }
         }
     };
@@ -147,12 +147,8 @@ public class LoadBlockBitmapTaskManager {
                 options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
                 options.inMutable = true;
                 Bitmap bmp =null;
-                try {
 
                 bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
-                }catch (IllegalArgumentException e){
-                    Log.e("what?",bitmapRegionRect.toString());
-                }
 
                 //放入Lru缓存
                 BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();

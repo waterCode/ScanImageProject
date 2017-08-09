@@ -87,11 +87,11 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     public void computeScroll() {
         if (mScroller.computeScrollOffset()) {//移动
             //直接获取间隔，然后调用moveto
-            /*Log.d(TAG, "XXX" + mScroller.getCurrX() + "YYY" + mScroller.getCurrY());
+            Log.d(TAG, "XXX" + mScroller.getCurrX() + "YYY" + mScroller.getCurrY());
             float dx = mScroller.getCurrX() - mViewPoint.getWindowInOriginalBitmap().left * mCurrentScaled;
             float dy = mScroller.getCurrY() - mViewPoint.getWindowInOriginalBitmap().top * mCurrentScaled;
             Log.d(TAG, "computeScroll dx" + dx + ",dy:" + dy);
-            moveTo(-dx, -dy);*/
+            moveTo(-dx, -dy);
         }
     }
 
