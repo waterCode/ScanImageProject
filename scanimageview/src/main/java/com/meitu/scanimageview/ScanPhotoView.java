@@ -218,11 +218,12 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
 
     private void getAllAvailableBlock(Point[] startAndEnd, int sampleScale, boolean isStartTask) {
+
+        boolean isAllBitmapBlockInCache = true;//是否都缓存区，是则取消队列中中的所有人无
         // TODO: 2017/8/8 这个应该在什么地方new？
         if (mLoadBitmapTaskManager == null) {
             mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBitmapRegionDecoder);
         }
-
 
         int startRow = startAndEnd[0].y;
         int startColumn = startAndEnd[0].x;
@@ -241,6 +242,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 //遍历每个位置，从缓存里面取，有就直接添加，没有就去开始一个任务去加载
                 BlockBitmap blockBitmap = getBlockBitmapFromLru(i, j, sampleScale);
                 if (blockBitmap == null) {//没有就开启一个任务去加载，异步的
+                    isAllBitmapBlockInCache =false;
                     if (isStartTask) {
                         startTask(i, j, sampleScale);
                     }
@@ -251,6 +253,10 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                     }
                 }
             }
+        }
+        if (isAllBitmapBlockInCache){
+            //清空所有任务队列
+            mLoadBitmapTaskManager.clearAllTask();
         }
     }
 

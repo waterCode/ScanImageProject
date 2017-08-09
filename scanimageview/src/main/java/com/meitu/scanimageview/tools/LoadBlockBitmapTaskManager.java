@@ -27,11 +27,13 @@ public class LoadBlockBitmapTaskManager {
     private BitmapRegionDecoder mDecoder;
     private Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SynchronizedPool<>(50);
     private Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SynchronizedPool<>(50);
+    private LIFOBlockDeque<Runnable> mLIFOBlockDeque  = new LIFOBlockDeque<>();
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = Math.max(2, Math.min(CPU_COUNT - 1, 4));
     private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;
     private static final int KEEP_ALIVE_SECONDS = 30;
+
 
     private final LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLruCache = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 4)) {
         @Override
@@ -41,16 +43,20 @@ public class LoadBlockBitmapTaskManager {
 
         @Override
         protected void entryRemoved(boolean evicted, BlockBitmap.Position key, BlockBitmap oldValue, BlockBitmap newValue) {
-            if(evicted) {
+            if (evicted) {
                 mBitmapSimplePool.release(oldValue.getBitmap());
                 mBlockBitmapSimplePool.release(oldValue);
             }
         }
     };
 
+    public void clearAllTask(){
+        mLIFOBlockDeque.clear();
+    }
+
     public LoadBlockBitmapTaskManager(Viewpoint mViewPoint, BitmapRegionDecoder decoder) {
         this.mViewPoint = mViewPoint;
-        mTaskPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS, new LIFOBlockDeque<Runnable>());
+        mTaskPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS, mLIFOBlockDeque);
         mDecoder = decoder;
     }
 
@@ -137,7 +143,7 @@ public class LoadBlockBitmapTaskManager {
                         + ",加载区域为：" + bitmapRegionRect.toString());
                 Log.d(TAG, "当前样例图片放大水平" + mViewpoint.getScaleLevel());
                 mViewpoint.checkBitmapRegion(bitmapRegionRect);//检查越界问题,如果越界取图片会造成崩溃
-                if(isRectRegionIllegal(bitmapRegionRect)){//不合法直接结束该线程执行
+                if (isRectRegionIllegal(bitmapRegionRect)) {//不合法直接结束该线程执行
                     return;
                 }
 
@@ -145,7 +151,7 @@ public class LoadBlockBitmapTaskManager {
                 options.inSampleSize = sampleScale;
                 options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
                 options.inMutable = true;
-                Bitmap bmp =null;
+                Bitmap bmp = null;
 
                 bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
 
@@ -162,14 +168,15 @@ public class LoadBlockBitmapTaskManager {
                     Log.d(TAG, reuseBlockBitmap.getPosition().toString() + "加载成功，开启回调");
                     mLoadBlockBitmapCallback.onLoadFinished();
                 }
-
+            } else {
+                Log.d(TAG, "重复任务执行bug:" + "任务不可见位置为" + "level" + sampleScale + ",row" + row + "column" + column);
             }
         }
 
-        public boolean isRectRegionIllegal(Rect rect){
-            if(rect.right<=rect.left||rect.bottom<=rect.top){
+        public boolean isRectRegionIllegal(Rect rect) {
+            if (rect.right <= rect.left || rect.bottom <= rect.top) {
                 return true;
-            }else {
+            } else {
                 return false;
             }
         }
