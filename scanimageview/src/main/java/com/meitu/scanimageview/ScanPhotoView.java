@@ -44,7 +44,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private float mMaxScale = 3;
     public static final int DEFAULT_ANIMATION_TIME = 400;
 
-    private Scroller mScroller;
+    private FlingScroller mScroller;
 
     private LoadBlockBitmapTaskManager mLoadBitmapTaskManager;
     private final Matrix mDisplayMatrix = new Matrix();
@@ -72,26 +72,37 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private void init() {
         mGestureDetector = new GestureDetector(getContext(), new MoveGestureListener());
         mScaleGestureDetector = new ScaleGestureDetector(getContext(), new ScaleGestureListener());
-        mScroller = new Scroller(getContext());
+        mScroller = new FlingScroller(getContext());
     }
 
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        mGestureDetector.onTouchEvent(event);
-        mScaleGestureDetector.onTouchEvent(event);
+        //mScaleGestureDetector.onTouchEvent(event);
+        if (!mScaleGestureDetector.isInProgress()) {
+            mGestureDetector.onTouchEvent(event);
+        }
         return true;
     }
 
+
     @Override
     public void computeScroll() {
-        if (mScroller.computeScrollOffset()) {//移动
+        if (mScroller.computeScrollOffset()) {//移动,左滑是负数
             //直接获取间隔，然后调用moveto
-            Log.d(TAG, "XXX" + mScroller.getCurrX() + "YYY" + mScroller.getCurrY());
-            float dx = mScroller.getCurrX() - mViewPoint.getWindowInOriginalBitmap().left * mCurrentScaled;
-            float dy = mScroller.getCurrY() - mViewPoint.getWindowInOriginalBitmap().top * mCurrentScaled;
-            Log.d(TAG, "computeScroll dx" + dx + ",dy:" + dy);
+            Log.d(TAG, "flingBug:currentXXX" + mScroller.getCurrX() + "YYY" + mScroller.getCurrY());
+            Log.d(TAG, "flingBug:速度" + mScroller.getCurrVelocity());
+            int currentValueX = mScroller.getCurrX();
+            float dx = (currentValueX - mScroller.getOldValueX()) * mCurrentScaled;
+            mScroller.setOldValueX(currentValueX);
+
+            int currentValueY = mScroller.getCurrY();
+            Log.d(TAG, "flingBug:viewPointWindow left" + mViewPoint.getWindowInOriginalBitmap().left);
+            float dy = (currentValueY - mScroller.getOldValueY()) * mCurrentScaled;
+            mScroller.setOldValueY(currentValueY);
+            Log.d(TAG, "flingBug:computeScroll dx" + dx + ",dy:" + dy);
             moveTo(-dx, -dy);
+            invalidate();
         }
     }
 
@@ -331,15 +342,16 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             Rect viewpointRect = mViewPoint.getWindowInOriginalBitmap();
             Rect originalBitmapRect = mViewPoint.getOriginalBitmapRect();
             //获取起始点，结束点，最大最小距离
-            float startX = viewpointRect.left * mCurrentScaled;//实际起始点
-            float startY = viewpointRect.top * mCurrentScaled;//
-            float minX = 0;
-            float minY = 0;
-            float maxX = originalBitmapRect.right * mCurrentScaled;
-            float maxY = originalBitmapRect.bottom * mCurrentScaled;
-            Log.d(TAG, "startX: " + startX + ",minX: " + startY + ",minX: " + minX + ",minY:" + minY + ",MaxX:" + maxX + ",MaxY:" + maxY + ",velocityX:" + velocityX + ",velocityY:" + velocityY);
+            float startX = 0;//实际起始点
+            float startY = 0;//
+            float minX = viewpointRect.right - originalBitmapRect.right;
+            float maxX = viewpointRect.left - originalBitmapRect.left;
+            float minY = viewpointRect.bottom - originalBitmapRect.bottom;
+            float maxY = viewpointRect.top - originalBitmapRect.top;
+            Log.d(TAG, "flingBug::startX: " + startX + ",minX: " + startY + ",minX: " + minX + ",minY:" + minY + ",MaxX:" + maxX + ",MaxY:" + maxY + ",velocityX:" + velocityX + ",velocityY:" + velocityY);
             mScroller.forceFinished(true);
             mScroller.fling((int) startX, (int) startY, (int) velocityX, (int) velocityY, (int) minX, (int) maxX, (int) minY, (int) maxY);
+            invalidate();
             return true;
         }
     }
@@ -516,7 +528,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
 
         private void initDisplayMatrixSetMinScale(Bitmap thumbnailBitmap, Viewpoint mViewPoint, int mThumbnailInSampleSize) {
-            // TODO: 2017/8/7 暂时从左上角开始
             float widthScale = 1f * mViewPoint.getRealWidth() / thumbnailBitmap.getWidth();
             float heightScale = 1f * mViewPoint.getRealHeight() / thumbnailBitmap.getHeight();
             float scale = Math.max(widthScale, heightScale);//取最小scale
@@ -530,4 +541,37 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     };
 
 
+    private class FlingScroller extends Scroller {
+
+        int mOldValueX = 0;
+        int mOldValueY = 0;
+
+        public FlingScroller(Context context) {
+            super(context);
+        }
+
+
+        public void setOldValueX(int oldValue) {
+            this.mOldValueX = oldValue;
+        }
+
+        public void setOldValueY(int oldValue) {
+            this.mOldValueY = oldValue;
+        }
+
+
+        public int getOldValueX() {
+            return mOldValueX;
+        }
+
+        public int getOldValueY() {
+            return mOldValueY;
+        }
+
+        @Override
+        public void fling(int startX, int startY, int velocityX, int velocityY, int minX, int maxX, int minY, int maxY) {
+            mOldValueX = 0;
+            super.fling(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY);
+        }
+    }
 }
