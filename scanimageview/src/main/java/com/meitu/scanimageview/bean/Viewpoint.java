@@ -21,11 +21,11 @@ public class Viewpoint {
     private final int mRealWidth;//真正的宽度
     private final int mRealHeight;//真正的高度
     private float mScaleLevel = 1;//放大倍数，详细的放大倍数
-    private List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
+    private final List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
     private int mBlockSize;
     private BlockBitmap mThumbnailBlock;
     private final Rect mOriginalBitmapRect;//原图大小区域，不会变
-    private Matrix mMatrix = new Matrix();//用来映射viewpoint所在区域用的矩阵
+    private final Matrix mMatrix = new Matrix();//用来映射viewpoint所在区域用的矩阵
 
     /**
      * @param mRealWidth          窗口的实际宽度
@@ -144,7 +144,6 @@ public class Viewpoint {
      * @return true 可见
      */
     public boolean checkIsVisiable(int row, int column, int sampleScale) {
-        // TODO: 2017/8/8 不知道为什么会加载sample为1的块，这里可见剔除非当前level
         if (sampleScale==getSampleScale()) {
             Rect region = getRect(row, column, sampleScale);
             return region.intersect(mWindowInOriginalBitmap);

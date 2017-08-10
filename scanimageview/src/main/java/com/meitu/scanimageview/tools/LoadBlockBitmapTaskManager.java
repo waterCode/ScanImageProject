@@ -25,9 +25,9 @@ public class LoadBlockBitmapTaskManager {
     private Viewpoint mViewPoint;
     private Executor mTaskPool;
     private BitmapRegionDecoder mDecoder;
-    private Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SynchronizedPool<>(30);
-    private Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SynchronizedPool<>(30);
-    private LIFOBlockDeque<Runnable> mLIFOBlockDeque  = new LIFOBlockDeque<>();
+    private final Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SynchronizedPool<>(30);
+    private final Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SynchronizedPool<>(30);
+    private final LIFOBlockDeque<Runnable> mLIFOBlockDeque  = new LIFOBlockDeque<>();
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = Math.max(2, Math.min(CPU_COUNT - 1, 4));
