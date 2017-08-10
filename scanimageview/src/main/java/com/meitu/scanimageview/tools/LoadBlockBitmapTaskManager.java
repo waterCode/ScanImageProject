@@ -123,7 +123,7 @@ public class LoadBlockBitmapTaskManager {
 
         }
 
-        public void initData(LoadBlockBitmapTaskManager loadBlockBitmapTaskManager, Viewpoint viewpoint, BitmapRegionDecoder decoder, LruCache<BlockBitmap.Position, BlockBitmap> blockBitmapLruCache) {
+        private void initData(LoadBlockBitmapTaskManager loadBlockBitmapTaskManager, Viewpoint viewpoint, BitmapRegionDecoder decoder, LruCache<BlockBitmap.Position, BlockBitmap> blockBitmapLruCache) {
             this.mViewpoint = viewpoint;
             this.mDecoder = decoder;
             mBlockBitmapLruCache = blockBitmapLruCache;
@@ -151,9 +151,9 @@ public class LoadBlockBitmapTaskManager {
                 options.inSampleSize = sampleScale;
                 options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
                 options.inMutable = true;
-                Bitmap bmp = null;
 
-                bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
+
+                Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
 
                 //放入Lru缓存
                 BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
@@ -173,12 +173,8 @@ public class LoadBlockBitmapTaskManager {
             }
         }
 
-        public boolean isRectRegionIllegal(Rect rect) {
-            if (rect.right <= rect.left || rect.bottom <= rect.top) {
-                return true;
-            } else {
-                return false;
-            }
+        private boolean isRectRegionIllegal(Rect rect) {
+            return rect.right <= rect.left || rect.bottom <= rect.top;
         }
 
         private Bitmap acquireReuseBitmap(int blockSize) {

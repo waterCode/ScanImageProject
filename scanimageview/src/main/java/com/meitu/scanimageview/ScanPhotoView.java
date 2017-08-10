@@ -212,7 +212,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
      * @param isStartTask 不存在的是否开启任务
      */
     private void getAllDetailBitmapBlock(Viewpoint mViewPoint, boolean isStartTask) {
-        Point[] startAndEnd = getStartAndEndPosition(mViewPoint, mBitmapRegionDecoder);//开始和结束的列
+        Point[] startAndEnd = getStartAndEndPosition(mViewPoint);//开始和结束的列
         getAllAvailableBlock(startAndEnd, mViewPoint.getSampleScale(), isStartTask);
     }
 
@@ -287,13 +287,16 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
     }
 
-    private Point[] getStartAndEndPosition(Viewpoint mViewPoint, BitmapRegionDecoder mBitmapRegionDecoder) {
+    /**
+     * 根据当前的viewPoint 获取开始的行和列
+     * @param mViewPoint 视图窗口
+     * @return 开始和结束的列的点坐标
+     */
+    private Point[] getStartAndEndPosition(Viewpoint mViewPoint) {
         int blockLength = mViewPoint.getBlockSizeInOriginalBitmap();//获取宽度
-        //int[] widthAndheight = mBitmapDecoderFactory.getImageWidthAndHeight();
+
         Rect viewpointWindow = mViewPoint.getWindowInOriginalBitmap();
 
-        /*int maxRow = widthAndheight[0] / blockLength + 1;
-        int maxColumn = widthAndheight[1] / blockLength + 1;*/
         int startRow = viewpointWindow.top / blockLength;
         int startColumn = viewpointWindow.left / blockLength;
         int endRow = viewpointWindow.bottom / blockLength + 1;
