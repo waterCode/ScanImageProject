@@ -44,7 +44,6 @@ public class LoadBlockBitmapTaskManager {
         @Override
         protected void entryRemoved(boolean evicted, BlockBitmap.Position key, BlockBitmap oldValue, BlockBitmap newValue) {
             if (evicted) {
-                mBitmapSimplePool.release(oldValue.getBitmap());
                 mBlockBitmapSimplePool.release(oldValue);
             }
         }
@@ -73,9 +72,7 @@ public class LoadBlockBitmapTaskManager {
         return mBlockBitmapSimplePool;
     }
 
-    public Pools.SimplePool<Bitmap> getBitmapSimplePool() {
-        return mBitmapSimplePool;
-    }
+
 
     /**
      * 后进先出的线程池队列
@@ -146,23 +143,23 @@ public class LoadBlockBitmapTaskManager {
                 if (isRectRegionIllegal(bitmapRegionRect)) {//不合法直接结束该线程执行
                     return;
                 }
+                //尝试获得块图对象
+                BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
+                if (reuseBlockBitmap == null) {//对象池里面木有就创建一个新的
+                    reuseBlockBitmap = new BlockBitmap(mViewpoint.getBlockSize(),mViewpoint.getBlockSize());//新建一个块图
+                }
+
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = sampleScale;
-                options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
+                options.inBitmap = reuseBlockBitmap.getBitmap();//将块图bitmap对象复用
                 options.inMutable = true;
 
 
                 Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
-
-                //放入Lru缓存
-                BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
-                if (reuseBlockBitmap != null) {
-                    reuseBlockBitmap.setBitmap(bmp);
-                } else {
-                    reuseBlockBitmap = new BlockBitmap(bmp);//新建一个块图
-                }
+                reuseBlockBitmap.setBitmap(bmp);
                 reuseBlockBitmap.setPosition(row, column, sampleScale);
+                //放入Lru缓存
                 mBlockBitmapLruCache.put(reuseBlockBitmap.getPosition(), reuseBlockBitmap);
                 if (mLoadBlockBitmapCallback != null) {
                     Log.d(TAG, reuseBlockBitmap.getPosition().toString() + "加载成功，开启回调");
@@ -177,12 +174,6 @@ public class LoadBlockBitmapTaskManager {
             return rect.right <= rect.left || rect.bottom <= rect.top;
         }
 
-        private Bitmap acquireReuseBitmap(int blockSize) {
-            Bitmap reuseBmp = mTaskManager.getBitmapSimplePool().acquire();
-            if (reuseBmp == null) {
-                reuseBmp = Bitmap.createBitmap(blockSize, blockSize, Bitmap.Config.ARGB_8888);
-            }
-            return reuseBmp;
-        }
+
     }
 }
