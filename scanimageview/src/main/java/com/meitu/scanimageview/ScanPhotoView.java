@@ -338,13 +338,16 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             //动画放大到最大，再点击，回到最小
             Log.d(TAG, "doubleTab");
             float goalScale;
+            Log.d(TAG,"double tap bug:currentScale" + mCurrentScaled);
+
             if ((mMaxScale - mCurrentScaled) < 0.2) {
                 //返回到最小
-                goalScale = mMinScale / mCurrentScaled;
+                goalScale = mMinScale ;
             } else {
                 //放大到最大
-                goalScale = mMaxScale / mCurrentScaled;
+                goalScale = mMaxScale ;
             }
+            Log.d(TAG,"double tap bug:goalScale" + goalScale);
             SmoothScale(goalScale, e.getX(), e.getY(), DEFAULT_ANIMATION_TIME);
             return true;
         }
