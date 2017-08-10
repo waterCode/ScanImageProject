@@ -33,7 +33,7 @@ import java.util.List;
 
 public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView implements LoadBlockBitmapCallback {
 
-    private String TAG = ScanPhotoView.class.getSimpleName();
+    private static final String TAG = ScanPhotoView.class.getSimpleName();
     private GestureDetector mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
     private BitmapRegionDecoder mBitmapRegionDecoder;
