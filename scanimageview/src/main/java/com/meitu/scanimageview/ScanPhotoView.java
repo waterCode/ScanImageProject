@@ -118,7 +118,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
         post(new Runnable() {
             @Override
             public void run() {
@@ -126,6 +125,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 loadThumbnailTask.execute();//执行加载缩略图任务
             }
         });
+        }
     }
 
 
