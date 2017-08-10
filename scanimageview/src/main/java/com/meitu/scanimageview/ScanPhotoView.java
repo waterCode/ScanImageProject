@@ -456,6 +456,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             float[] realMove = getRealMove(distanceX, distanceY);//越界检查
             mDisplayMatrix.postTranslate(-realMove[0], -realMove[1]);
             mViewPoint.moveWindow(realMove[0] * 1f / mCurrentScaled, realMove[1] * 1f / mCurrentScaled);
+            Log.d(TAG,"抖动bug："+"moveTo: "+"distanceX"+distanceX+"distanceY"+distanceY);
             findNeedLoadBitmapBlockAndSumitTask();
             invalidate();
         }
@@ -580,6 +581,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         @Override
         public void fling(int startX, int startY, int velocityX, int velocityY, int minX, int maxX, int minY, int maxY) {
             mOldValueX = 0;
+            mOldValueY = 0;
             super.fling(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY);
         }
     }
