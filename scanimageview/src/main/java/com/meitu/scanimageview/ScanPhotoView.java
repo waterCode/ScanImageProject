@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.widget.Scroller;
 
 import com.meitu.scanimageview.bean.BlockBitmap;
 import com.meitu.scanimageview.bean.Viewpoint;
@@ -32,7 +33,7 @@ import java.util.List;
 
 public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView implements LoadBlockBitmapCallback {
 
-    private String TAG = ScanPhotoView.class.getSimpleName();
+    private static final String TAG = ScanPhotoView.class.getSimpleName();
     private GestureDetector mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
     private BitmapRegionDecoder mBitmapRegionDecoder;
@@ -43,6 +44,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private float mMaxScale = 3;
     public static final int DEFAULT_ANIMATION_TIME = 400;
 
+    private FlingScroller mScroller;
 
     private LoadBlockBitmapTaskManager mLoadBitmapTaskManager;
     private final Matrix mDisplayMatrix = new Matrix();
@@ -70,14 +72,38 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     private void init() {
         mGestureDetector = new GestureDetector(getContext(), new MoveGestureListener());
         mScaleGestureDetector = new ScaleGestureDetector(getContext(), new ScaleGestureListener());
+        mScroller = new FlingScroller(getContext());
     }
 
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        mGestureDetector.onTouchEvent(event);
         mScaleGestureDetector.onTouchEvent(event);
+        if (!mScaleGestureDetector.isInProgress()) {
+            mGestureDetector.onTouchEvent(event);
+        }
         return true;
+    }
+
+
+    @Override
+    public void computeScroll() {
+        if (mScroller.computeScrollOffset()) {//移动,左滑是负数
+            //直接获取间隔，然后调用moveto
+            Log.d(TAG, "flingBug:currentXXX" + mScroller.getCurrX() + "YYY" + mScroller.getCurrY());
+            Log.d(TAG, "flingBug:速度" + mScroller.getCurrVelocity());
+            int currentValueX = mScroller.getCurrX();
+            float dx = (currentValueX - mScroller.getOldValueX()) * mCurrentScaled;
+            mScroller.setOldValueX(currentValueX);
+
+            int currentValueY = mScroller.getCurrY();
+            Log.d(TAG, "flingBug:viewPointWindow left" + mViewPoint.getWindowInOriginalBitmap().left);
+            float dy = (currentValueY - mScroller.getOldValueY()) * mCurrentScaled;
+            mScroller.setOldValueY(currentValueY);
+            Log.d(TAG, "flingBug:computeScroll dx" + dx + ",dy:" + dy);
+            moveTo(-dx, -dy);
+            invalidate();
+        }
     }
 
     @Override
@@ -92,7 +118,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
         post(new Runnable() {
             @Override
             public void run() {
@@ -100,11 +125,13 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 loadThumbnailTask.execute();//执行加载缩略图任务
             }
         });
+        }
     }
 
 
     @Override
     protected void onDraw(Canvas canvas) {
+
         if (mViewPoint != null) {
             //设置viewpoint的放大倍数
             //mViewPoint.setScaleLevel(mCurrentScale);
@@ -116,7 +143,7 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
 
             }
-            getAllDetailBitmapBlock(mViewPoint);//拿到所有缓存中有的块
+            getAllDetailBitmapBlock(mViewPoint, false);//拿到所有缓存中有的块
             //为所有的块设置位置
             updateAllBitmapBlock();
             //遍历绘制上去
@@ -179,18 +206,20 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     }
 
     /**
-     * 获取所有的清晰模块
+     * 拿到缓存区所有块
      *
-     * @param mViewPoint 窗口类
+     * @param mViewPoint  视图窗口
+     * @param isStartTask 不存在的是否开启任务
      */
-    private List<BlockBitmap> getAllDetailBitmapBlock(Viewpoint mViewPoint) {
-        Point[] startAndEnd = getStartAndEndPosition(mViewPoint, mBitmapRegionDecoder);//开始和结束的列
-        getAllAvailableBlock(startAndEnd, mViewPoint.getSampleScale());
-        return null;
+    private void getAllDetailBitmapBlock(Viewpoint mViewPoint, boolean isStartTask) {
+        Point[] startAndEnd = getStartAndEndPosition(mViewPoint);//开始和结束的列
+        getAllAvailableBlock(startAndEnd, mViewPoint.getSampleScale(), isStartTask);
     }
 
 
-    private void getAllAvailableBlock(Point[] startAndEnd, int sampleScale) {
+    private void getAllAvailableBlock(Point[] startAndEnd, int sampleScale, boolean isStartTask) {
+
+        boolean isAllBitmapBlockInCache = true;//是否都缓存区，是则取消队列中中的所有人无
         // TODO: 2017/8/8 这个应该在什么地方new？
         if (mLoadBitmapTaskManager == null) {
             mLoadBitmapTaskManager = new LoadBlockBitmapTaskManager(mViewPoint, mBitmapRegionDecoder);
@@ -203,22 +232,36 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
 
         int i = startRow;
         int j;
-
-        List<BlockBitmap> blockBitmapList = mViewPoint.getBlockBitmapList();
-        blockBitmapList.clear();//使用前先清空
-
+        List<BlockBitmap> blockBitmapList = null;
+        if (!isStartTask) {
+            blockBitmapList = mViewPoint.getBlockBitmapList();
+            blockBitmapList.clear();//使用前先清空
+        }
         for (; i < endRow; i++) {
             for (j = startColumn; j < endColumn; j++) {
                 //遍历每个位置，从缓存里面取，有就直接添加，没有就去开始一个任务去加载
                 BlockBitmap blockBitmap = getBlockBitmapFromLru(i, j, sampleScale);
                 if (blockBitmap == null) {//没有就开启一个任务去加载，异步的
-                    startTask(i, j, sampleScale);
+                    isAllBitmapBlockInCache =false;
+                    if (isStartTask) {
+                        startTask(i, j, sampleScale);
+                    }
                 } else {
                     //有的话添加入图片块集合
-                    blockBitmapList.add(blockBitmap);//设置模块
+                    if (!isStartTask) {
+                        blockBitmapList.add(blockBitmap);//设置模块
+                    }
                 }
             }
         }
+        if (isAllBitmapBlockInCache){
+            //清空所有任务队列
+            mLoadBitmapTaskManager.clearAllTask();
+        }
+    }
+
+    public void findNeedLoadBitmapBlockAndSumitTask() {
+        getAllDetailBitmapBlock(mViewPoint, true);
     }
 
     private void startTask(int row, int column, int sampleScale) {
@@ -244,13 +287,16 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
     }
 
-    private Point[] getStartAndEndPosition(Viewpoint mViewPoint, BitmapRegionDecoder mBitmapRegionDecoder) {
+    /**
+     * 根据当前的viewPoint 获取开始的行和列
+     * @param mViewPoint 视图窗口
+     * @return 开始和结束的列的点坐标
+     */
+    private Point[] getStartAndEndPosition(Viewpoint mViewPoint) {
         int blockLength = mViewPoint.getBlockSizeInOriginalBitmap();//获取宽度
-        //int[] widthAndheight = mBitmapDecoderFactory.getImageWidthAndHeight();
+
         Rect viewpointWindow = mViewPoint.getWindowInOriginalBitmap();
 
-        /*int maxRow = widthAndheight[0] / blockLength + 1;
-        int maxColumn = widthAndheight[1] / blockLength + 1;*/
         int startRow = viewpointWindow.top / blockLength;
         int startColumn = viewpointWindow.left / blockLength;
         int endRow = viewpointWindow.bottom / blockLength + 1;
@@ -283,14 +329,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             return true;
         }
 
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            int dx = (int) (e2.getX() - e1.getX());
-            int dy = (int) (e2.getY() - e1.getY());
-            Log.d(TAG, "onFling" + ",dx::" + dx + ",dy::" + dy);
-
-            return true;
-        }
 
         @Override
         public boolean onDoubleTap(MotionEvent e) {
@@ -305,6 +343,24 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 goalScale = mMaxScale / mCurrentScaled;
             }
             SmoothScale(goalScale, e.getX(), e.getY(), DEFAULT_ANIMATION_TIME);
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            Rect viewpointRect = mViewPoint.getWindowInOriginalBitmap();
+            Rect originalBitmapRect = mViewPoint.getOriginalBitmapRect();
+            //获取起始点，结束点，最大最小距离
+            float startX = 0;//实际起始点
+            float startY = 0;//
+            float minX = viewpointRect.right - originalBitmapRect.right;
+            float maxX = viewpointRect.left - originalBitmapRect.left;
+            float minY = viewpointRect.bottom - originalBitmapRect.bottom;
+            float maxY = viewpointRect.top - originalBitmapRect.top;
+            Log.d(TAG, "flingBug::startX: " + startX + ",minX: " + startY + ",minX: " + minX + ",minY:" + minY + ",MaxX:" + maxX + ",MaxY:" + maxY + ",velocityX:" + velocityX + ",velocityY:" + velocityY);
+            mScroller.forceFinished(true);
+            mScroller.fling((int) startX, (int) startY, (int) velocityX, (int) velocityY, (int) minX, (int) maxX, (int) minY, (int) maxY);
+            invalidate();
             return true;
         }
     }
@@ -345,67 +401,75 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             scaleFactor = mMaxScale / mCurrentScaled;
         }
 
-        if(scaleFactor<1) {
-            float[] focus = checkFocus(sx, sy);
-            sx = focus[0];
-            sy = focus[1];
-        }
         Log.d(TAG, "ScaleFactor:" + scaleFactor);
         Rect viewPointWindow = mViewPoint.getWindowInOriginalBitmap();
         Log.d(TAG, "focusX：" + sx);
         Log.d(TAG, "focusY：" + sy);
-        float focusX, focusY;//在屏幕的放大中心
+        float focusXInOriginBitmap, focusYInOriginBitmap;//在屏幕的放大中心
 
-        focusX = 1f / mCurrentScaled * sx + viewPointWindow.left;//在原图中的放大中心点
-        focusY = 1f / mCurrentScaled * sy + viewPointWindow.top;//在原图中的放大中心点
+        focusXInOriginBitmap = 1f / mCurrentScaled * sx + viewPointWindow.left;//在原图中的放大中心点
+        focusYInOriginBitmap = 1f / mCurrentScaled * sy + viewPointWindow.top;//在原图中的放大中心点
 
-        Log.d(TAG, "focusXInOriginalBitmap：" + focusX);
-        Log.d(TAG, "focusYInOriginalBitmap：" + focusY);
-
-        mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
+        Log.d(TAG, "focusXInOriginalBitmap：" + focusXInOriginBitmap);
+        Log.d(TAG, "focusYInOriginalBitmap：" + focusYInOriginBitmap);
         Log.d(TAG, "currentScale:" + mCurrentScaled);
-        mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
         if (mViewPoint != null) {
             mDisplayMatrix.postScale(scaleFactor, scaleFactor, sx, sy);//实际移动图片
+            mViewPoint.postScaleWindow(1f / scaleFactor, focusXInOriginBitmap, focusYInOriginBitmap);
+            mCurrentScaled *= scaleFactor;//实时更新当前放大倍数
+            mViewPoint.setScaleLevel(1f / mCurrentScaled);//同时设置viewPoint的window放大水平1
+            float[] moveDxAndDy = checkPosition();
+            Log.d(TAG, "缩放后移动距离为dx: " + moveDxAndDy[0] + "需移动dy是：" + moveDxAndDy[1]);
+            mDisplayMatrix.postTranslate(-moveDxAndDy[0], -moveDxAndDy[1]);
+            mViewPoint.moveWindow(moveDxAndDy[0] * 1f / mCurrentScaled, moveDxAndDy[1] * 1f / mCurrentScaled);
 
-            mViewPoint.postScaleWindow(1f / scaleFactor, focusX, focusY);
+            findNeedLoadBitmapBlockAndSumitTask();
             invalidate();
-            moveTo(0,0);
+
         }
     }
 
-    private float[] checkFocus(float sx, float sy) {
-        sx *= 1f/mCurrentScaled;
-        sy *= 1f/mCurrentScaled;
-        float[] focus = new float[2];
+
+    private float[] checkPosition() {
         Rect window = mViewPoint.getWindowInOriginalBitmap();
+        float[] dxAndDy = new float[2];
         int[] widthAndHeight = mBitmapDecoderFactory.getImageWidthAndHeight();
-        if (window.left <= 1) {
-            sx = 0;
+        if (window.left < 0) {
+            dxAndDy[0] = 0 - window.left;
         }
-        if (window.top <= 1) {
-            sy = 0;
+        if (window.top < 0) {
+            dxAndDy[1] = 0 - window.top;
         }
-        if (window.right >= widthAndHeight[0]) {
-            sx = window.right;
+        if (window.right > widthAndHeight[0]) {
+            dxAndDy[0] = widthAndHeight[0] - window.right;
         }
-        if (window.bottom >= widthAndHeight[1]) {
-            sy = window.bottom;
+        if (window.bottom > widthAndHeight[1]) {
+            dxAndDy[1] = widthAndHeight[1] - window.bottom;
         }
-        focus[0] = sx * mCurrentScaled;
-        focus[1] = sy * mCurrentScaled;
-        return focus;
+        dxAndDy[0] *= mCurrentScaled;
+        dxAndDy[1] *= mCurrentScaled;
+        return dxAndDy;
     }
 
-    private void moveTo(int distanceX, int distanceY) {
+    private void moveTo(float distanceX, float distanceY) {
         if (mViewPoint != null) {
             float[] realMove = getRealMove(distanceX, distanceY);//越界检查
             mDisplayMatrix.postTranslate(-realMove[0], -realMove[1]);
-            mViewPoint.moveWindow((int) (realMove[0] * 1f / mCurrentScaled), (int) (realMove[1] * 1f / mCurrentScaled));
+            mViewPoint.moveWindow(realMove[0] * 1f / mCurrentScaled, realMove[1] * 1f / mCurrentScaled);
+            Log.d(TAG,"抖动bug："+"moveTo: "+"distanceX"+distanceX+"distanceY"+distanceY);
+            findNeedLoadBitmapBlockAndSumitTask();
             invalidate();
         }
     }
 
+
+    /**
+     * 获取真正需要移动距离
+     *
+     * @param distanceX x轴距离
+     * @param distanceY y轴距离
+     * @return 一个素组move【0】表示宽，move【1】表示高
+     */
     private float[] getRealMove(float distanceX, float distanceY) {
         float[] move = new float[2];
         Rect window = mViewPoint.getWindowInOriginalBitmap();
@@ -413,20 +477,24 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         Log.d(TAG, "当前left" + window.left);
         Log.d(TAG, "可能移动distanceX" + distanceX);
         if ((window.left + distanceX) < 0) {
-            distanceX = 0 - window.left;
+            float bigDistanceX = 0 - window.left;
+            distanceX = bigDistanceX * mCurrentScaled;
         }
         if ((window.right + distanceX) > widthAndHeight[0]) {
-            distanceX = widthAndHeight[0] - window.right;
+            float bigDistanceX = widthAndHeight[0] - window.right;
+            distanceX = bigDistanceX * mCurrentScaled;
         }
         if ((window.top + distanceY) < 0) {
-            distanceY = 0 - window.top;
+            float bigDistanceY = 0 - window.top;
+            distanceY = bigDistanceY * mCurrentScaled;
         }
         if ((window.bottom + distanceY > widthAndHeight[1])) {
-            distanceY = widthAndHeight[1] - window.bottom;
+            float bigDistanceY = widthAndHeight[1] - window.bottom;
+            distanceY = bigDistanceY * mCurrentScaled;
         }
         Log.d(TAG, "实际移动distanceX" + distanceX);
-        move[0] = distanceX * mCurrentScaled;
-        move[1] = distanceY * mCurrentScaled;
+        move[0] = distanceX;
+        move[1] = distanceY;
         return move;
     }
 
@@ -452,9 +520,15 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                 mViewPoint.setThumbnail(thumbnailBitmap);//设置缩略图
                 //设置初始位置
                 initViewPointWindow();
-                postInvalidate();
+
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            findNeedLoadBitmapBlockAndSumitTask();
+            invalidate();
         }
 
         private void initViewPointWindow() {
@@ -464,7 +538,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         }
 
         private void initDisplayMatrixSetMinScale(Bitmap thumbnailBitmap, Viewpoint mViewPoint, int mThumbnailInSampleSize) {
-            // TODO: 2017/8/7 暂时从左上角开始
             float widthScale = 1f * mViewPoint.getRealWidth() / thumbnailBitmap.getWidth();
             float heightScale = 1f * mViewPoint.getRealHeight() / thumbnailBitmap.getHeight();
             float scale = Math.max(widthScale, heightScale);//取最小scale
@@ -478,4 +551,38 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
     };
 
 
+    private class FlingScroller extends Scroller {
+
+        int mOldValueX = 0;
+        int mOldValueY = 0;
+
+        public FlingScroller(Context context) {
+            super(context);
+        }
+
+
+        public void setOldValueX(int oldValue) {
+            this.mOldValueX = oldValue;
+        }
+
+        public void setOldValueY(int oldValue) {
+            this.mOldValueY = oldValue;
+        }
+
+
+        public int getOldValueX() {
+            return mOldValueX;
+        }
+
+        public int getOldValueY() {
+            return mOldValueY;
+        }
+
+        @Override
+        public void fling(int startX, int startY, int velocityX, int velocityY, int minX, int maxX, int minY, int maxY) {
+            mOldValueX = 0;
+            mOldValueY = 0;
+            super.fling(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY);
+        }
+    }
 }

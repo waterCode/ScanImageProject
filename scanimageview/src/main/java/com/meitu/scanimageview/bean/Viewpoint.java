@@ -21,11 +21,11 @@ public class Viewpoint {
     private final int mRealWidth;//真正的宽度
     private final int mRealHeight;//真正的高度
     private float mScaleLevel = 1;//放大倍数，详细的放大倍数
-    private List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
+    private final List<BlockBitmap> mBlockBitmapList = new ArrayList<>();//图片
     private int mBlockSize;
     private BlockBitmap mThumbnailBlock;
-    private final Rect originalBitmap;//原图大小区域，不会变
-    private Matrix mMatrix = new Matrix();
+    private final Rect mOriginalBitmapRect;//原图大小区域，不会变
+    private final Matrix mMatrix = new Matrix();//用来映射viewpoint所在区域用的矩阵
 
     /**
      * @param mRealWidth          窗口的实际宽度
@@ -36,12 +36,16 @@ public class Viewpoint {
         this.mRealHeight = mRealHeight;
         this.mRealWidth = mRealWidth;
         mStartWindow = new RectF(0, 0, (mRealWidth), (mRealHeight));
-        originalBitmap = new Rect(0, 0, imageWidthAndHeight[0], imageWidthAndHeight[1]);//原图的大小
+        mOriginalBitmapRect = new Rect(0, 0, imageWidthAndHeight[0], imageWidthAndHeight[1]);//原图的大小
         //mBlockSize = mRealWidth / 4 + ((mRealWidth % 4) == 0 ? 2 : 0);
         mBlockSize = (mRealHeight + mRealWidth) / 4 + (((mRealHeight + mRealWidth) % 4) == 0 ? 2 : 1);//分块机制
 
     }
 
+
+    public Rect getOriginalBitmapRect() {
+        return mOriginalBitmapRect;
+    }
 
     public int getBlockSizeInOriginalBitmap() {
         return mBlockSize * getSampleScale();
@@ -58,10 +62,10 @@ public class Viewpoint {
     }
 
     private void transFormRectToRectF(Rect rect, RectF rectF) {
-        int left = (int) rectF.left;
-        int right = (int) rectF.right;
-        int top = (int) rectF.top;
-        int bottom = (int) rectF.bottom;
+        int left = Math.round( rectF.left);
+        int right =Math.round(rectF.right);
+        int top = Math.round(rectF.top);
+        int bottom = Math.round(rectF.bottom);
         rect.set(left, top, right, bottom);
     }
 
@@ -118,7 +122,7 @@ public class Viewpoint {
      * @param distanceX 手指移动的x距离
      * @param distanceY 手指移动的y距离
      */
-    public void moveWindow(int distanceX, int distanceY) {
+    public void moveWindow(float distanceX, float distanceY) {
         mMatrix.postTranslate(distanceX, distanceY);
     }
 
@@ -140,7 +144,6 @@ public class Viewpoint {
      * @return true 可见
      */
     public boolean checkIsVisiable(int row, int column, int sampleScale) {
-        // TODO: 2017/8/8 不知道为什么会加载sample为1的块，这里可见剔除非当前level
         if (sampleScale==getSampleScale()) {
             Rect region = getRect(row, column, sampleScale);
             return region.intersect(mWindowInOriginalBitmap);
@@ -164,11 +167,11 @@ public class Viewpoint {
         if (bitmapRegionRect.top < 0) {
             bitmapRegionRect.top = 0;
         }
-        if (bitmapRegionRect.right > originalBitmap.right) {
-            bitmapRegionRect.right = originalBitmap.right;
+        if (bitmapRegionRect.right > mOriginalBitmapRect.right) {
+            bitmapRegionRect.right = mOriginalBitmapRect.right;
         }
-        if (bitmapRegionRect.bottom > originalBitmap.bottom) {
-            bitmapRegionRect.bottom = originalBitmap.bottom;
+        if (bitmapRegionRect.bottom > mOriginalBitmapRect.bottom) {
+            bitmapRegionRect.bottom = mOriginalBitmapRect.bottom;
         }
 
     }

@@ -10,12 +10,12 @@ import android.graphics.Rect;
 public class BlockBitmap {
 
     private Bitmap mBitmap;
-    private Position mPosition = new Position();
+    private final Position mPosition = new Position();
 
     private final Rect src = new Rect();//在原图的位置
     private final Rect dst = new Rect();//需要画在原图的区域
 
-    private Rect mPositionInOriginBitmap = new Rect();
+    private final Rect mPositionInOriginBitmap = new Rect();
 
     public BlockBitmap(int width, int height) {
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);

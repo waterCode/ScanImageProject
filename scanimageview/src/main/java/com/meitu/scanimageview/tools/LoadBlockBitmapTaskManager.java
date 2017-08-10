@@ -25,15 +25,17 @@ public class LoadBlockBitmapTaskManager {
     private Viewpoint mViewPoint;
     private Executor mTaskPool;
     private BitmapRegionDecoder mDecoder;
-    private Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SimplePool<>(30);
-    private Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SimplePool<>(30);
+    private final Pools.SimplePool<BlockBitmap> mBlockBitmapSimplePool = new Pools.SynchronizedPool<>(30);
+    private final Pools.SimplePool<Bitmap> mBitmapSimplePool = new Pools.SynchronizedPool<>(30);
+    private final LIFOBlockDeque<Runnable> mLIFOBlockDeque  = new LIFOBlockDeque<>();
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = Math.max(2, Math.min(CPU_COUNT - 1, 4));
     private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;
     private static final int KEEP_ALIVE_SECONDS = 30;
 
-    private final LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLruCache = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 4)) {
+
+    private final LruCache<BlockBitmap.Position, BlockBitmap> mBlockBitmapLruCache = new LruCache<BlockBitmap.Position, BlockBitmap>((int) (Runtime.getRuntime().maxMemory() / 6)) {
         @Override
         protected int sizeOf(BlockBitmap.Position key, BlockBitmap value) {
             return value.getBitmap().getByteCount();
@@ -41,16 +43,19 @@ public class LoadBlockBitmapTaskManager {
 
         @Override
         protected void entryRemoved(boolean evicted, BlockBitmap.Position key, BlockBitmap oldValue, BlockBitmap newValue) {
-            // TODO: 2017/8/8 这个原理。
-            if(!evicted) {
-                mBitmapSimplePool.release(oldValue.getBitmap());
+            if (evicted) {
                 mBlockBitmapSimplePool.release(oldValue);
             }
         }
     };
+
+    public void clearAllTask(){
+        mLIFOBlockDeque.clear();
+    }
+
     public LoadBlockBitmapTaskManager(Viewpoint mViewPoint, BitmapRegionDecoder decoder) {
         this.mViewPoint = mViewPoint;
-        mTaskPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS, new LIFOBlockDeque<Runnable>());
+        mTaskPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS, mLIFOBlockDeque);
         mDecoder = decoder;
     }
 
@@ -67,12 +72,11 @@ public class LoadBlockBitmapTaskManager {
         return mBlockBitmapSimplePool;
     }
 
-    public Pools.SimplePool<Bitmap> getBitmapSimplePool() {
-        return mBitmapSimplePool;
-    }
+
 
     /**
      * 后进先出的线程池队列
+     *
      * @param <T> 队列参数类型
      */
     private class LIFOBlockDeque<T> extends LinkedBlockingDeque<T> {
@@ -116,7 +120,7 @@ public class LoadBlockBitmapTaskManager {
 
         }
 
-        public void initData(LoadBlockBitmapTaskManager loadBlockBitmapTaskManager, Viewpoint viewpoint, BitmapRegionDecoder decoder, LruCache<BlockBitmap.Position, BlockBitmap> blockBitmapLruCache) {
+        private void initData(LoadBlockBitmapTaskManager loadBlockBitmapTaskManager, Viewpoint viewpoint, BitmapRegionDecoder decoder, LruCache<BlockBitmap.Position, BlockBitmap> blockBitmapLruCache) {
             this.mViewpoint = viewpoint;
             this.mDecoder = decoder;
             mBlockBitmapLruCache = blockBitmapLruCache;
@@ -136,38 +140,40 @@ public class LoadBlockBitmapTaskManager {
                         + ",加载区域为：" + bitmapRegionRect.toString());
                 Log.d(TAG, "当前样例图片放大水平" + mViewpoint.getScaleLevel());
                 mViewpoint.checkBitmapRegion(bitmapRegionRect);//检查越界问题,如果越界取图片会造成崩溃
+                if (isRectRegionIllegal(bitmapRegionRect)) {//不合法直接结束该线程执行
+                    return;
+                }
+                //尝试获得块图对象
+                BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
+                if (reuseBlockBitmap == null) {//对象池里面木有就创建一个新的
+                    reuseBlockBitmap = new BlockBitmap(mViewpoint.getBlockSize(),mViewpoint.getBlockSize());//新建一个块图
+                }
+
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = sampleScale;
-                options.inBitmap = acquireReuseBitmap(mViewpoint.getBlockSize());//获取复用，让他去解析
+                options.inBitmap = reuseBlockBitmap.getBitmap();//将块图bitmap对象复用
                 options.inMutable = true;
 
-                Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);
-                //放入Lru缓存
 
-
-                BlockBitmap reuseBlockBitmap = mTaskManager.getBlockBitmapSimplePool().acquire();
-                if (reuseBlockBitmap != null) {
-                    reuseBlockBitmap.setBitmap(bmp);
-                } else {
-                    reuseBlockBitmap = new BlockBitmap(bmp);//新建一个块图
-                }
+                Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
+                reuseBlockBitmap.setBitmap(bmp);
                 reuseBlockBitmap.setPosition(row, column, sampleScale);
+                //放入Lru缓存
                 mBlockBitmapLruCache.put(reuseBlockBitmap.getPosition(), reuseBlockBitmap);
                 if (mLoadBlockBitmapCallback != null) {
                     Log.d(TAG, reuseBlockBitmap.getPosition().toString() + "加载成功，开启回调");
                     mLoadBlockBitmapCallback.onLoadFinished();
                 }
-
+            } else {
+                Log.d(TAG, "重复任务执行bug:" + "任务不可见位置为" + "level" + sampleScale + ",row" + row + "column" + column);
             }
         }
 
-        private Bitmap acquireReuseBitmap(int blockSize) {
-            Bitmap reuseBmp = mTaskManager.getBitmapSimplePool().acquire();
-            if (reuseBmp == null) {
-                reuseBmp = Bitmap.createBitmap(blockSize, blockSize, Bitmap.Config.ARGB_8888);
-            }
-            return reuseBmp;
+        private boolean isRectRegionIllegal(Rect rect) {
+            return rect.right <= rect.left || rect.bottom <= rect.top;
         }
+
+
     }
 }
