@@ -37,7 +37,7 @@ public class Viewpoint {
         this.mRealWidth = mRealWidth;
         mStartWindow = new RectF(0, 0, (mRealWidth), (mRealHeight));
         mOriginalBitmapRect = new Rect(0, 0, imageWidthAndHeight[0], imageWidthAndHeight[1]);//原图的大小
-        mBlockSize = mRealWidth ;
+        mBlockSize = mRealWidth/2 ;
         //mBlockSize = (mRealHeight + mRealWidth) / 4 + (((mRealHeight + mRealWidth) % 4) == 0 ? 2 : 1);//分块机制
 
     }

@@ -143,11 +143,12 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
                     + "width:" + window.width() + "height" + window.height());
             if (mViewPoint.getmThumbnailBlock() != null) {
                 canvas.drawBitmap(mViewPoint.getmThumbnailBlock().getBitmap(), mDisplayMatrix, null);
-
             }
+
             getAllDetailBitmapBlock(mViewPoint, false);//拿到所有缓存中有的块
             //为所有的块设置位置
             updateAllBitmapBlock();
+
             //遍历绘制上去
             canvas.save();
             float scaleCanvas = mViewPoint.getSampleScale() / mViewPoint.getScaleLevel();
