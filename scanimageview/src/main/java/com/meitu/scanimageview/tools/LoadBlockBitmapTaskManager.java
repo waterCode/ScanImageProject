@@ -135,6 +135,7 @@ public class LoadBlockBitmapTaskManager {
         public void run() {
             if (mViewpoint.checkIsVisiable(row, column, sampleScale)) {
                 //加载图片
+
                 Rect bitmapRegionRect = mViewpoint.getRect(row, column, sampleScale);
                 Log.d(TAG, "开始加载图片块" + "所在行为" + row + ",列：" + column + "sampleScale:" + sampleScale
                         + ",加载区域为：" + bitmapRegionRect.toString());
@@ -156,7 +157,9 @@ public class LoadBlockBitmapTaskManager {
                 options.inMutable = true;
 
 
+                long time = System.currentTimeMillis();
                 Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
+                Log.d(TAG,"优化显示：加载图片时间"+(System.currentTimeMillis() - time));
                 reuseBlockBitmap.setBitmap(bmp);
                 reuseBlockBitmap.setPosition(row, column, sampleScale);
                 //放入Lru缓存
