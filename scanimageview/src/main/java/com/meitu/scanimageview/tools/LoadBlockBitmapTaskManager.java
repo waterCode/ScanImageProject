@@ -159,9 +159,11 @@ public class LoadBlockBitmapTaskManager {
 
                 long time = System.currentTimeMillis();
                 Bitmap bmp = mDecoder.decodeRegion(bitmapRegionRect, options);//如果宽高相等话会出现不合法的情况
+                bmp.prepareToDraw();
                 Log.d(TAG,"优化显示：加载图片时间"+(System.currentTimeMillis() - time));
                 reuseBlockBitmap.setBitmap(bmp);
                 reuseBlockBitmap.setPosition(row, column, sampleScale);
+
                 //放入Lru缓存
                 mBlockBitmapLruCache.put(reuseBlockBitmap.getPosition(), reuseBlockBitmap);
                 if (mLoadBlockBitmapCallback != null) {
