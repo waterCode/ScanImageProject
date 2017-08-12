@@ -1,3 +1,4 @@
+GitHub同步 https://github.com/waterCode
 动图
 ![image](https://github.com/waterCode/ScanImageProject/blob/master/scanimageview/src/main/assets/ezgif.com-video-to-gif.gif)
 
