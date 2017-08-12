@@ -1,4 +1,5 @@
 动图
+![image](https://github.com/waterCode/ScanImageProject)
 
 
 用法
