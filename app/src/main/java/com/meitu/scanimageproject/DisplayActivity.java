@@ -40,7 +40,6 @@ public class DisplayActivity extends AppCompatActivity {
         }
 
         uri = getIntent().getParcelableExtra("uri");
-
         mScanImageView = (ScanPhotoView) findViewById(R.id.scan_imageView);
         mScanImageView.setImageURI(uri);
 
