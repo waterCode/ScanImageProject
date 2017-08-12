@@ -1,5 +1,5 @@
 动图
-![image](https://github.com/waterCode/ScanImageProject)
+![image](https://github.com/waterCode/ScanImageProject/blob/master/scanimageview/src/main/assets/ezgif.com-video-to-gif.gif)
 
 
 用法
