@@ -10,3 +10,4 @@ uri是从上一个Activity里传来的
         mScanImageView = (ScanPhotoView) findViewById(R.id.scan_imageView);
         mScanImageView.setImageURI(uri);
 ```
+使用手势包括放大缩小，快滑，双击，可以查看大图

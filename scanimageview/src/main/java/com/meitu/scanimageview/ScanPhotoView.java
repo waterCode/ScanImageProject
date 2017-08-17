@@ -391,7 +391,6 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
         public boolean onScale(ScaleGestureDetector detector) {
             float scaleFactor = detector.getScaleFactor();//放大因子
             ScanPhotoView.this.onScale(scaleFactor, detector.getFocusX(), detector.getFocusY());
-
             return true;
         }
     }
@@ -547,9 +546,12 @@ public class ScanPhotoView extends android.support.v7.widget.AppCompatImageView 
             float widthScale = 1f * mViewPoint.getRealWidth() / thumbnailBitmap.getWidth();
             float heightScale = 1f * mViewPoint.getRealHeight() / thumbnailBitmap.getHeight();
             float scale = Math.max(widthScale, heightScale);//取最小scale
-            mDisplayMatrix.postScale(scale, scale);
+            mDisplayMatrix.postScale(scale, scale);//展示图放大的倍数
             mMinScale = 1f / mThumbnailInSampleSize * scale;
             mCurrentScaled = mMinScale;
+            if(mMinScale>mMaxScale){
+                mMaxScale = mMinScale;//应付小图的情况
+            }
             mViewPoint.setScaleLevel(1f / mCurrentScaled);
 
         }
