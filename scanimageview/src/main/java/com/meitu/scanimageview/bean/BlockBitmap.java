@@ -9,6 +9,7 @@ import android.graphics.Rect;
 
 public class BlockBitmap {
 
+    //最新ban
     private Bitmap mBitmap;
     private final Position mPosition = new Position();
 
